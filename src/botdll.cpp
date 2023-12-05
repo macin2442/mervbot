@@ -501,8 +501,13 @@ try {
 #endif
 
 #if __linux__
-	// TODO
+	// https://tldp.org/HOWTO/Program-Library-HOWTO/dl-libraries.html
+	// https://tldp.org/HOWTO/html_single/C++-dlopen/#AEN263
 	DLLhMod[slot] = dlopen(plugin.msg, RTLD_NOW);
+	if (DLLhMod[slot] == nullptr) {
+		h->logEvent("ERROR: Failed to load plugin %s at slot %i: %s", plugin.msg, slot, dlerror());
+	}
+
 #else
 	DLLhMod[slot] = LoadLibrary(plugin.msg);
 #endif
@@ -526,7 +531,12 @@ try {
 	strncpy(ModuleName[slot], plugin.msg, DLL_NAMELEN);
 
 #if __linux__
-	// TODO we cannot use ordinal values in Linux
+	// https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getprocaddress
+	// The Windows code uses ordinal values to find the entrypoint.
+	// The plugins export a single function on Windows (talk) which can then
+	// be accessed via ordinal value 1. On Linux no ordinal values exist.
+	// Instead we load the symbol corresponding to the demangled name "talk(BotEvent&)".
+	DLL_TALK[slot] = (CALL_TALK)GetProcAddress(DLLhMod[slot], "_Z4talkR8BotEvent");
 #else
 	DLL_TALK[slot] = (CALL_TALK)GetProcAddress(DLLhMod[slot], (LPCSTR)1);
 #endif
