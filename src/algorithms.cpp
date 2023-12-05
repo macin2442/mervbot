@@ -171,7 +171,7 @@ bool split(char d, char *in, char *out, Uint32 lx, Uint32 ly)
 			if (inHeader == false)
 			{
 				Uint32 len = limit(end - start + 1, ly - 1);
-				std::memcpy(out, in + start, len);
+				memcpy(out, in + start, len);
 				out[len] = 0;
 				inHeader = true;
 				start = 0;
