@@ -21,10 +21,10 @@ class opEntry
 	friend struct BOT_DATABASE;
 
 public:
-	opEntry(char *nname, char *ppass, Operator_Level aaccess);
+	opEntry(const char *nname, const char *ppass, Operator_Level aaccess);
 
-	void setPassword(char *ppass);
-	void setName(char *nname);
+	void setPassword(const char *ppass);
+	void setName(const char *nname);
 	void setAccess(Operator_Level aaccess);
 
 	Operator_Level getAccess();
@@ -35,8 +35,8 @@ public:
 	Uint32 getFailureCount();
 	char *getName();
 
-	bool validateName(char *nname);
-	bool validatePass(char *ppass);
+	bool validateName(const char *nname);
+	bool validatePass(const char *ppass);
 };
 
 class cmdAlias
@@ -44,10 +44,10 @@ class cmdAlias
 	String cmd, alias;
 
 public:
-	cmdAlias(char *ccmd, char *aalias);
+	cmdAlias(const char *ccmd, const char *aalias);
 
-	bool isCmd(char *ccmd);
-	bool isAlias(char *aalias);
+	bool isCmd(const char *ccmd);
+	bool isAlias(const char *aalias);
 
 	bool test(char *&ccmd);	// change command to alias on match
 
@@ -76,10 +76,10 @@ struct BOT_DATABASE
 	_linkedlist <opEntry> opList;
 	bool operatorsUpdated;
 
-	opEntry *findOperator(char *name);
-	opEntry *addOperator(char *name, Operator_Level level);
-	opEntry *addOperator(char *name, char *pass, Operator_Level level);
-	bool removeOperator(char *name);
+	opEntry *findOperator(const char *name);
+	opEntry *addOperator(const char *name, Operator_Level level);
+	opEntry *addOperator(const char *name, const char *pass, Operator_Level level);
+	bool removeOperator(const char *name);
 
 	void loadOperators();
 	void saveOperators();
@@ -92,15 +92,15 @@ struct BOT_DATABASE
 	bool aliasesUpdated;
 
 	void aliasCommand(char *&command);
-	void addAlias(char *command, char *alias);
-	bool killAlias(char *alias);
+	void addAlias(const char *command, const char *alias);
+	bool killAlias(const char *alias);
 
-	cmdAlias *findAlias(char *alias);
+	cmdAlias *findAlias(const char *alias);
 
 	void loadAliases();
 	void saveAliases();
 
-	String getAliasList(char *command);
+	String getAliasList(const char *command);
 
 	// INI
 	char regName[40];

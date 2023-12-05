@@ -8,10 +8,16 @@
 #ifndef BOT_H
 #define BOT_H
 
+class DLLImports;
+
 #include "dllcore.h"
 
+#if __linux__
+#include "windows_compat.h"
+#else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 typedef void (__stdcall *CALL_TALK)(BotEvent &event);
 

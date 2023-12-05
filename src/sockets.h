@@ -10,7 +10,11 @@
 #ifndef SOCKETS_H
 #define SOCKETS_H
 
+#if __linux__
+#include "winsock_compat.h"
+#else
 #include <winsock2.h>
+#endif
 
 #include "datatypes.h"
 
@@ -40,7 +44,7 @@ struct INADDR
 
 	char *getString();					// Dotted quad representation
 	int getPort();						// Return host-order
-	sockaddr *getAddress();				// Passable address
+	struct sockaddr *getAddress();				// Passable address
 	void set(Uint32 ip, Uint16 port);	// Re-fill address
 };
 
@@ -56,7 +60,9 @@ struct UDPPacket
 class UDPSocket
 {
 	SOCKET sid;							// Socket identifier
+#if !__linux__
 	HANDLE event;						// Read event polling
+#endif
 	INADDR remote;						// Remote address
 
 	UDPPacket packet;					// Speedup, not thread-safe
@@ -80,7 +86,7 @@ public:
 char *WSAGetErrorString(int code);		// Get a string-representation of an error code
 
 
-Uint32 resolveHostname(char *name);	// Resolve Internet address from dotted quad representations
+Uint32 resolveHostname(const char *name);	// Resolve Internet address from dotted quad representations
 
 
 Uint16 HTONS(Uint16 hostshort);		// Reverse byte order

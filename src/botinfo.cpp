@@ -41,9 +41,13 @@ void BOT_INFO::set(BOT_INFO &a)
 void BOT_INFO::resetSystemInfo()
 {
 	// CPU type
+#if __linux__
+	processor = 8664;	// = PROCESSOR_AMD_X8664
+#else
 	SYSTEM_INFO si;
 	GetSystemInfo(&si);
 	processor = si.dwProcessorType;
+#endif
 
 	// Windows registration name
 	{
@@ -121,17 +125,17 @@ void BOT_INFO::resetSystemInfo()
 	setSetting32(HKEY_LOCAL_MACHINE, "SOFTWARE", "D1", machineID);
 }
 
-void BOT_INFO::setSpawn(char *ddllName)
+void BOT_INFO::setSpawn(const char *ddllName)
 {
 	strncpy(dllName, ddllName, 256);
 }
 
-void BOT_INFO::setParams(char *pParams)
+void BOT_INFO::setParams(const char *pParams)
 {
 	strncpy(params, pParams, 512);
 }
 
-void BOT_INFO::setLogin(char *nname, char *ppassword, char *sstaffpw)
+void BOT_INFO::setLogin(const char *nname, const char *ppassword, const char *sstaffpw)
 {
 	strncpy(name, nname, 64);
 	strncpy(password, ppassword, 64);
@@ -150,7 +154,7 @@ void BOT_INFO::setDatabase(BOT_DATABASE *ddb, Uint32 mmaxSpawns)
 	maxSpawns = mmaxSpawns;
 }
 
-void BOT_INFO::setArena(char *iinitialArena, Ship_Types iinitialShip, Uint16 xxres, Uint16 yyres, bool aallowAudio)
+void BOT_INFO::setArena(const char *iinitialArena, Ship_Types iinitialShip, Uint16 xxres, Uint16 yyres, bool aallowAudio)
 {
 	strncpy(initialArena, iinitialArena, 64);
 	initialShip = iinitialShip;
@@ -161,7 +165,7 @@ void BOT_INFO::setArena(char *iinitialArena, Ship_Types iinitialShip, Uint16 xxr
 	allowAudio = aallowAudio;
 }
 
-void BOT_INFO::setBan(Uint32 mmachineID, Uint16 ttimeZoneBias, Uint32 ppermissionID, Uint32 pprocessor, char *rregName, char *rregOrg)
+void BOT_INFO::setBan(Uint32 mmachineID, Uint16 ttimeZoneBias, Uint32 ppermissionID, Uint32 pprocessor, const char *rregName, const char *rregOrg)
 {
 	machineID = mmachineID;
 	timeZoneBias = ttimeZoneBias;
@@ -193,7 +197,7 @@ void BOT_INFO::maskBan()
 	}
 }
 
-void BOT_INFO::setReg(char *rrealName, char *eemail, char *ccity, char *sstate, RegForm_Sex ssex, BYTE aage, bool pplayAtHome, bool pplayAtWork, bool pplayAtSchool)
+void BOT_INFO::setReg(const char *rrealName, const char *eemail, const char *ccity, const char *sstate, RegForm_Sex ssex, BYTE aage, bool pplayAtHome, bool pplayAtWork, bool pplayAtSchool)
 {
 	strncpy(realName, rrealName, 64);
 	strncpy(email, eemail, 64);

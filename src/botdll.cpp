@@ -500,7 +500,12 @@ try {
 		return true;
 #endif
 
+#if __linux__
+	// TODO
+	DLLhMod[slot] = dlopen(plugin.msg, RTLD_NOW);
+#else
 	DLLhMod[slot] = LoadLibrary(plugin.msg);
+#endif
 
 #ifndef _DEBUG
 } catch (...)
@@ -520,7 +525,11 @@ try {
 
 	strncpy(ModuleName[slot], plugin.msg, DLL_NAMELEN);
 
+#if __linux__
+	// TODO we cannot use ordinal values in Linux
+#else
 	DLL_TALK[slot] = (CALL_TALK)GetProcAddress(DLLhMod[slot], (LPCSTR)1);
+#endif
 
 	if (!DLL_TALK[slot])
 	{

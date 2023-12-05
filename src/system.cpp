@@ -11,7 +11,7 @@ using namespace std;
 
 //////// Settings macros ////////
 
-Uint32 getPrivateProfile32(char *section, char *key, char *def, char *path)
+Uint32 getPrivateProfile32(const char *section, const char *key, const char *def, const char *path)
 {
 	char buffer[32];
 

@@ -4,13 +4,14 @@
 #include "system.h"
 #include "clientprot.h"
 #include "command.h"
+#include <cstring>
 
 using namespace std;
 
 
 //////// Operators ////////
 
-opEntry::opEntry(char *nname, char *ppass, Operator_Level aaccess)
+opEntry::opEntry(const char *nname, const char *ppass, Operator_Level aaccess)
 :	name(nname),
 	pass(ppass)
 {
@@ -20,12 +21,12 @@ opEntry::opEntry(char *nname, char *ppass, Operator_Level aaccess)
 	failedAttempts = 0;
 }
 
-void opEntry::setPassword(char *ppass)
+void opEntry::setPassword(const char *ppass)
 {
 	pass = ppass;
 }
 
-void opEntry::setName(char *nname)
+void opEntry::setName(const char *nname)
 {
 	name = nname;
 }
@@ -65,12 +66,12 @@ char *opEntry::getName()
 	return name.msg;
 }
 
-bool opEntry::validateName(char *nname)
+bool opEntry::validateName(const char *nname)
 {
 	return (name == nname);
 }
 
-bool opEntry::validatePass(char *ppass)
+bool opEntry::validatePass(const char *ppass)
 {
 	if (!pass.msg[0]) return true;	// NULL passwords are unassigned
 
@@ -80,18 +81,18 @@ bool opEntry::validatePass(char *ppass)
 
 //////// Aliases ////////
 
-cmdAlias::cmdAlias(char *ccmd, char *aalias)
+cmdAlias::cmdAlias(const char *ccmd, const char *aalias)
 :	cmd(ccmd),
 	alias(aalias)
 {
 }
 
-bool cmdAlias::isCmd(char *ccmd)
+bool cmdAlias::isCmd(const char *ccmd)
 {
 	return (cmd == ccmd);
 }
 
-bool cmdAlias::isAlias(char *aalias)
+bool cmdAlias::isAlias(const char *aalias)
 {
 	return (alias == aalias);
 }
@@ -134,7 +135,7 @@ void BOT_DATABASE::aliasCommand(char *&command)
 	}
 }
 
-void BOT_DATABASE::addAlias(char *command, char *alias)
+void BOT_DATABASE::addAlias(const char *command, const char *alias)
 {
 	cmdAlias *a = new cmdAlias(command, alias);
 	if (a)
@@ -145,7 +146,7 @@ void BOT_DATABASE::addAlias(char *command, char *alias)
 	}
 }
 
-bool BOT_DATABASE::killAlias(char *alias)
+bool BOT_DATABASE::killAlias(const char *alias)
 {
 	_listnode <cmdAlias> *parse = aliasList.head;
 
@@ -166,7 +167,7 @@ bool BOT_DATABASE::killAlias(char *alias)
 	return false;
 }
 
-cmdAlias *BOT_DATABASE::findAlias(char *alias)
+cmdAlias *BOT_DATABASE::findAlias(const char *alias)
 {
 	_listnode <cmdAlias> *parse = aliasList.head;
 
@@ -183,7 +184,7 @@ cmdAlias *BOT_DATABASE::findAlias(char *alias)
 	return NULL;
 }
 
-String BOT_DATABASE::getAliasList(char *command)
+String BOT_DATABASE::getAliasList(const char *command)
 {
 	_listnode <cmdAlias> *parse = aliasList.head;
 
@@ -219,7 +220,7 @@ String BOT_DATABASE::getAliasList(char *command)
 
 //////// Operators ////////
 
-opEntry *BOT_DATABASE::findOperator(char *name)
+opEntry *BOT_DATABASE::findOperator(const char *name)
 {
 	_listnode <opEntry> *parse = opList.head;
 
@@ -238,7 +239,7 @@ opEntry *BOT_DATABASE::findOperator(char *name)
 	return NULL;
 }
 
-opEntry *BOT_DATABASE::addOperator(char *name, char *pass, Operator_Level access)
+opEntry *BOT_DATABASE::addOperator(const char *name, const char *pass, Operator_Level access)
 {
 	opEntry *op = new opEntry(name, pass, access);
 
@@ -270,14 +271,14 @@ opEntry *BOT_DATABASE::addOperator(char *name, char *pass, Operator_Level access
 	return op;
 }
 
-opEntry *BOT_DATABASE::addOperator(char *name, Operator_Level level)
+opEntry *BOT_DATABASE::addOperator(const char *name, Operator_Level level)
 {
 	opEntry *op = addOperator(name, "", level);
 
 	return op;
 }
 
-bool BOT_DATABASE::removeOperator(char *name)
+bool BOT_DATABASE::removeOperator(const char *name)
 {
 	opEntry *op = findOperator(name);
 	if (op == NULL) return false;
@@ -295,8 +296,8 @@ BOT_DATABASE::BOT_DATABASE()
 {
 	// Retrieve path
 	GetCurrentDirectory(520, path);
-	strcat(path, "\\");
-	strcat(path, INI_NAME);
+	std::strcat(path, "\\");
+	std::strcat(path, INI_NAME);
 
 	lastSave = getTime();
 	saveInterval = 30000;

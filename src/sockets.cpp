@@ -4,7 +4,9 @@
 
 #include "algorithms.h"
 
+#if !__linux__
 #pragma comment(lib, "ws2_32.lib")
+#endif
 
 
 //////// Winsock2 interface ////////
@@ -28,14 +30,20 @@ void endWinsock()
 
 UDPSocket::UDPSocket()
 {
+#if __linux__
+	sid = SOCKET_ERROR;
+#else
 	sid = (Uint32)SOCKET_ERROR;
+#endif
 }
 
 UDPSocket::~UDPSocket()
 {
 	if (sid != SOCKET_ERROR)
 	{
+#if !__linux__
 		WSACloseEvent(event);
+#endif
 		closesocket(sid);
 	}
 }
@@ -44,7 +52,9 @@ SOCKET UDPSocket::create(Uint16 port)
 {
 	if (sid != SOCKET_ERROR)
 	{
+#if !__linux__
 		WSACloseEvent(event);
+#endif
 		closesocket(sid);
 	}
 
@@ -64,8 +74,10 @@ SOCKET UDPSocket::create(Uint16 port)
 		return (SOCKET)SOCKET_ERROR;
 	}
 
+#if !__linux__
 	event = WSACreateEvent();
 	WSAEventSelect(sid, event, FD_READ);
+#endif
 
 	return sid;
 }
@@ -92,7 +104,17 @@ bool UDPSocket::send(char *msg, int len)
 
 UDPPacket *UDPSocket::poll()
 {
+#if !__linux__
 	if (WSAWaitForMultipleEvents(1, &event, false, 0, true) == WSA_WAIT_EVENT_0)
+#else
+	fd_set rfds;
+	struct timeval tv;
+	tv.tv_sec = 0;
+	tv.tv_usec = 0;
+
+	FD_SET(sid, &rdfs);
+	if (select(sid + 1, &rdfs, NULL, NULL, &tv) > 0)
+#endif
 	{
 		int len, FromLen = sizeof(INADDR);
 		INADDR src;
@@ -152,9 +174,9 @@ int INADDR::getPort()
 	return HTONS(port);
 }
 
-sockaddr *INADDR::getAddress()
+struct sockaddr *INADDR::getAddress()
 {
-	return (sockaddr*)this;
+	return (struct sockaddr*)this;
 }
 
 void INADDR::set(Uint32 nip, Uint16 nport)
@@ -168,6 +190,9 @@ void INADDR::set(Uint32 nip, Uint16 nport)
 
 char *WSAGetErrorString(int code)
 {
+#if __linux__
+	return strerror(code);
+#else
 	switch (code)
 	{
 		case WSANOTINITIALISED:			return "WSANOTINITIALISED";
@@ -195,6 +220,7 @@ char *WSAGetErrorString(int code)
 		case WSA_OPERATION_ABORTED:		return "WSA_OPERATION_ABORTED";
 		default:						return "Unknown error";
 	};
+#endif
 }
 
 
@@ -205,7 +231,7 @@ Uint16 HTONS(Uint16 hostshort)
 	return (hostshort >> 8) | (hostshort << 8);
 }
 
-Uint32 resolveHostname(char *name)
+Uint32 resolveHostname(const char *name)
 {
 	Uint32 ip = inet_addr(name);
 

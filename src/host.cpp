@@ -2283,7 +2283,7 @@ String getTimeString()
 	return date;
 }
 
-void Host::logEvent(char *format, ...)
+void Host::logEvent(const char *format, ...)
 {
 	// Smart way to do terminal printing: Pretty timestamp, log file, no bleep bug
 	bool seen = false;

@@ -8,11 +8,15 @@
 
 #include "datatypes.h"
 
+#if __linux__
+#include "windows_compat.h"
+#else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
+#endif
 
-Uint32 getPrivateProfile32(char *section, char *key, char *def, char *path);
+Uint32 getPrivateProfile32(const char *section, const char *key, const char *def, const char *path);
 
 Uint32 getSetting32(HKEY baseKey, const char *path, const char *value);
 
@@ -30,6 +34,6 @@ void setWindowTitle(char *title);
 bool readDataLines(char *file, void (*callback)(char *line));
 
 // Decompress buffer to a file on disk
-bool _stdcall decompress_to_file(char *name, void *buffer, Uint32 len);
+bool decompress_to_file(char *name, void *buffer, Uint32 len);
 
 #endif	// SYSTEM_H

@@ -1,7 +1,12 @@
 #include "algorithms.h"
 
+#if __linux__
+#include <chrono>
+#include <cstring>
+#else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#endif
 
 
 //////// Integer square root ////////
@@ -41,7 +46,14 @@ Sint32 pos_quadratic(Sint32 a, Sint32 b, Sint32 c)
 
 Uint32 getTime()
 {
+#if __linux__
+	static auto t0 = std::chrono::steady_clock::now();
+
+	auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0);
+	return (Uint32)(dt.count() / 10);
+#else
 	return GetTickCount() / 10;
+#endif
 }
 
 
@@ -159,7 +171,7 @@ bool split(char d, char *in, char *out, Uint32 lx, Uint32 ly)
 			if (inHeader == false)
 			{
 				Uint32 len = limit(end - start + 1, ly - 1);
-				memcpy(out, in + start, len);
+				std::memcpy(out, in + start, len);
 				out[len] = 0;
 				inHeader = true;
 				start = 0;
@@ -188,7 +200,7 @@ bool split(char d, char *in, char *out, Uint32 lx, Uint32 ly)
 	return (x == lx);
 }
 
-char *basetable	= "0123456789abcdefghijklmnopqrstuv",
+const char *basetable	= "0123456789abcdefghijklmnopqrstuv",
 	 *zeroes	= "00000000000000000000000000000000",
 	 *negsign	= "-";
 
@@ -326,6 +338,9 @@ void swap(Uint16 &a, Uint16 &b)
 
 Uint32 IMULHIDWORD(Uint32 A, Uint32 B)
 {
+#if __linux__
+	return A * B;
+#else
 	Uint32 HDW;
 	
 #ifdef __GNUC__ //Cyan~Fire: Added MinGW-style asm
@@ -342,6 +357,7 @@ Uint32 IMULHIDWORD(Uint32 A, Uint32 B)
 #endif
 
 	return HDW;
+#endif
 }
 
 
@@ -349,6 +365,10 @@ Uint32 IMULHIDWORD(Uint32 A, Uint32 B)
 
 void IDIVCOMP(Uint32 value, Uint32 width, Uint32 &x, Uint32 &y)
 {
+#if __linux__
+	x = value / width;
+	y = value % width;
+#else
 	Uint32 a, b;
 
 #ifdef __GNUC__ //Cyan~Fire
@@ -369,6 +389,7 @@ void IDIVCOMP(Uint32 value, Uint32 width, Uint32 &x, Uint32 &y)
 
 	x = a;
 	y = b;
+#endif
 }
 
 

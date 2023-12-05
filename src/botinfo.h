@@ -63,19 +63,19 @@ struct BOT_INFO
 
 	void resetSystemInfo();
 
-	void setLogin(char *nname,
-				  char *ppassword,
-				  char *sstaffpw);
+	void setLogin(const char *nname,
+				  const char *ppassword,
+				  const char *sstaffpw);
 
 	void setZone(Uint32 iip,
 				 Uint16 pport);
 
-	void setSpawn(char *ddllName);
+	void setSpawn(const char *ddllName);
 
 	void setDatabase(BOT_DATABASE *ddb,
 					 Uint32 mmaxSpawns);
 
-	void setArena(char *iinitialArena,
+	void setArena(const char *iinitialArena,
 				  Ship_Types iinitialShip,
 				  Uint16 xxres,
 				  Uint16 yyres,
@@ -85,15 +85,15 @@ struct BOT_INFO
 				Uint16 ttimeZoneBias,
 				Uint32 ppermissionID,
 				Uint32 pprocessor,
-				char *rregName,
-				char *rregOrg);
+				const char *rregName,
+				const char *rregOrg);
 
 	void maskBan();
 
-	void setReg(char *rrealName,
-				char *eemail,
-				char *ccity,
-				char *sstate,
+	void setReg(const char *rrealName,
+				const char *eemail,
+				const char *ccity,
+				const char *sstate,
 				RegForm_Sex ssex,
 				BYTE aage,
 				bool pplayAtHome,

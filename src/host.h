@@ -396,7 +396,7 @@ public:
 	// Logs
 //	MDIChild *terminal;
 
-	void logEvent(char *format, ...);
+	void logEvent(const char *format, ...);
 	void logIncoming(char *packet, Uint32 len);
 	void logOutgoing(char *packet, Uint32 len);
 };
