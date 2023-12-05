@@ -7,11 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(dep/zlib)
 
-configure_file(MERVBot.INI MERVBot.INI COPYONLY)
-configure_file(cfg/Commands.txt Commands.txt COPYONLY)
-configure_file(cfg/Operators.txt Operators.txt COPYONLY)
-configure_file(cfg/Spawns.txt Spawns.txt COPYONLY)
-
 add_executable(${PROJECT_NAME}
 	src/algorithms.cpp
 	src/botdb.cpp
@@ -61,6 +56,12 @@ target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE dep/zlib $<TARGET_PROP
 #file(GENERATE OUTPUT zlib_paths.txt CONTENT $<TARGET_PROPERTY:zlib,INCLUDE_DIRECTORIES>)
 
 target_link_libraries(${PROJECT_NAME} zlibstatic)
+
+add_custom_target(
+	${PROJECT_NAME}-config ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/MERVBot.INI ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Commands.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Operators.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Spawns.txt $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    COMMENT "Copying configuration files to ${PROJECT_NAME} output directory..."
+)
 
 if (UNIX)
 	add_executable(test
