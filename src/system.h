@@ -14,6 +14,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
+#include <string>
 #endif
 
 Uint32 getPrivateProfile32(const char *section, const char *key, const char *def, const char *path);
@@ -35,5 +36,9 @@ bool readDataLines(char *file, void (*callback)(char *line));
 
 // Decompress buffer to a file on disk
 bool decompress_to_file(const char *name, void *buffer, unsigned long len);
+
+#if !__linux__
+std::string getLastErrorAsString();
+#endif
 
 #endif	// SYSTEM_H

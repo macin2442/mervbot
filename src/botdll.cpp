@@ -5,6 +5,7 @@
 #include "clientprot.h"
 #include "host.h"
 #include "botdb.h"
+#include "system.h"
 
 typedef void (__stdcall *pfnEnsureInit)(void);
 typedef void (__stdcall *pfnForceTerm)(void);
@@ -501,15 +502,15 @@ try {
 #endif
 
 #if __linux__
-	// https://tldp.org/HOWTO/Program-Library-HOWTO/dl-libraries.html
-	// https://tldp.org/HOWTO/html_single/C++-dlopen/#AEN263
 	DLLhMod[slot] = dlopen(plugin.msg, RTLD_NOW);
 	if (DLLhMod[slot] == nullptr) {
 		h->logEvent("ERROR: Failed to load plugin %s at slot %i: %s", plugin.msg, slot, dlerror());
 	}
-
 #else
 	DLLhMod[slot] = LoadLibrary(plugin.msg);
+	if (DLLhMod[slot] == nullptr) {
+		h->logEvent("ERROR: Failed to load plugin %s at slot %i: %s", plugin.msg, slot, getLastErrorAsString().c_str());
+	}
 #endif
 
 #ifndef _DEBUG
