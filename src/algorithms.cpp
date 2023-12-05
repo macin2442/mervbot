@@ -338,7 +338,7 @@ void swap(Uint16 &a, Uint16 &b)
 
 Uint32 IMULHIDWORD(Uint32 A, Uint32 B)
 {
-#if __linux__
+#if __linux__ || _M_X64
 	return A * B;
 #else
 	Uint32 HDW;
@@ -365,7 +365,7 @@ Uint32 IMULHIDWORD(Uint32 A, Uint32 B)
 
 void IDIVCOMP(Uint32 value, Uint32 width, Uint32 &x, Uint32 &y)
 {
-#if __linux__
+#if __linux__ || _M_X64
 	x = value / width;
 	y = value % width;
 #else

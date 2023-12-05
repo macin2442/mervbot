@@ -5,8 +5,7 @@
 #include <fstream>
 using namespace std;
 
-#include "zlib.h"
-#pragma comment(lib, "zlib.lib")
+#include <zlib.h>
 
 
 //////// Settings macros ////////
