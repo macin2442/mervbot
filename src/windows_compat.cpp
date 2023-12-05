@@ -17,6 +17,9 @@
 #include <map>
 #include <memory>
 
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/filtering_stream.hpp>
+
 namespace pt = boost::property_tree;
 namespace fs = boost::filesystem;
 
@@ -369,6 +372,61 @@ uint32_t GetCurrentDirectory(uint32_t nBufferLength, char *lpBuffer)
 	}
 }
 
+class ini_filter
+{
+public:
+    typedef char char_type;
+    typedef boost::iostreams::input_filter_tag category;
+
+    bool begin_{true};
+    int saved_{EOF};
+
+    template <typename Source>
+    int get(Source &src)
+    {
+        int c;
+        if (saved_ != EOF)
+        {
+            c = saved_;
+            saved_ = EOF;
+        }
+        else {
+            c = boost::iostreams::get(src);
+        }
+
+        if (begin_)
+        {
+            if (c != EOF && c != boost::iostreams::WOULD_BLOCK && !std::isspace((unsigned char)c)) {
+                begin_ = false;
+
+                if (c != EOF && c != boost::iostreams::WOULD_BLOCK && (unsigned char)c == '/')
+                {
+                    c = boost::iostreams::get(src);
+                    if (c != EOF && c != boost::iostreams::WOULD_BLOCK && (unsigned char)c == '/')
+                    {
+                        // we found a leading "//" and replace it by a "#"
+                        c = '#';
+                    }
+                    else
+                    {
+                        // only a single "/" remember the current character and first return the '/'
+                        saved_ = c;
+                        c = '/';
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (c != EOF && c != boost::iostreams::WOULD_BLOCK && (unsigned char)c == '\n') {
+                begin_ = true;
+            }
+        }
+
+        return c;
+    }
+};
+
 DWORD GetPrivateProfileString(const char *lpAppName, const char *lpKeyName, const char *lpDefault, char *lpReturnedString, uint32_t nSize, const char *lpFileName)
 {
 	// lpAppName = name of section containing the key name
@@ -390,7 +448,11 @@ DWORD GetPrivateProfileString(const char *lpAppName, const char *lpKeyName, cons
 
 	try
 	{
-		pt::ini_parser::read_ini<pt::ptree>(boost::filesystem::canonical(file).string(), ini);
+		boost::iostreams::filtering_istream ini_stream;
+		ini_stream.push(ini_filter());
+		ini_stream.push(boost::iostreams::file_descriptor(boost::filesystem::canonical(file).string()));
+
+		pt::ini_parser::read_ini<pt::ptree>(ini_stream, ini);
 	}
 	catch (boost::filesystem::filesystem_error &e)
 	{
@@ -432,7 +494,11 @@ BOOL WritePrivateProfileString(const char *lpAppName, const char *lpKeyName, con
 
 	try
 	{
-		pt::ini_parser::read_ini<pt::ptree>(boost::filesystem::canonical(file).string(), ini);
+		boost::iostreams::filtering_istream ini_stream;
+		ini_stream.push(ini_filter());
+		ini_stream.push(boost::iostreams::file_descriptor(boost::filesystem::canonical(file).string()));
+
+		pt::ini_parser::read_ini<pt::ptree>(ini_stream, ini);
 	}
 	catch (boost::filesystem::filesystem_error &e)
 	{

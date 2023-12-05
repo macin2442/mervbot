@@ -38,7 +38,7 @@ add_executable(${PROJECT_NAME}
 )
 
 if (UNIX)
-	find_package(Boost COMPONENTS filesystem program_options REQUIRED)
+	find_package(Boost COMPONENTS filesystem program_options iostreams REQUIRED)
 	if(NOT Boost_FOUND)
 		message(error ": Boost library not found.")
 	endif()
