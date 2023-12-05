@@ -26,7 +26,7 @@ BYTE simpleChecksum(void *buffer, Uint32 len)
 //////// File checksum ////////
 // This section made possible by Snrrrub
 
-Uint32 getFileChecksum(void *buffer, Uint32 *dictionary, Uint32 len)
+Uint32 getFileChecksum(const void *buffer, Uint32 *dictionary, Uint32 len)
 {
 	Uint32 Index = 0,
 		   Key   = Index - 1;
@@ -40,7 +40,7 @@ Uint32 getFileChecksum(void *buffer, Uint32 *dictionary, Uint32 len)
 	return ~Key;
 }
 
-Uint32 getFileChecksum(char *fileName, Uint32 *dictionary)
+Uint32 getFileChecksum(const char *fileName, Uint32 *dictionary)
 {
 	Uint32 chk = 0xffffffff;
 
@@ -102,6 +102,9 @@ void generateDictionary(Uint32 *offset, Uint32 key)
 
 Uint32 generateLevelChecksum(Uint32 key, char *mapData)
 {	// Snrrrub's literal version
+#if __linux__
+	typedef long LONG;
+#endif
 	LONG EAX, ECX, ESI, EDX;
 	LONG cnt;
 

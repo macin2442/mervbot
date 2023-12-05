@@ -9,7 +9,7 @@
 
 //////// Enumerations ////////
 
-char *getLevelString(Operator_Level access)
+const char *getLevelString(Operator_Level access)
 {
 	switch (access)
 	{
@@ -30,7 +30,7 @@ char *getLevelString(Operator_Level access)
 	};
 }
 
-char *getPrizeString(Sint16 prize)
+const char *getPrizeString(Sint16 prize)
 {
 	switch (prize % 29)
 	{
@@ -103,7 +103,7 @@ void Player::setBanner(char *bbanner)
 	memcpy(banner, bbanner, 96);
 }
 
-Player::Player(Uint16 iident, char *nname, char *ssquad, Uint32 fflagPoints, Uint32 kkillPoints, Uint16 tteam, Uint16 wwins, Uint16 llosses, BYTE sship, bool aacceptsAudio, Uint16 fflagCount)
+Player::Player(Uint16 iident, const char *nname, const char *ssquad, Uint32 fflagPoints, Uint32 kkillPoints, Uint16 tteam, Uint16 wwins, Uint16 llosses, BYTE sship, bool aacceptsAudio, Uint16 fflagCount)
 {
 	strncpy(name, nname, 20);
 	strncpy(squad, ssquad, 20);

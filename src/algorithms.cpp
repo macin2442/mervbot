@@ -1,8 +1,7 @@
 #include "algorithms.h"
 
 #if __linux__
-#include <chrono>
-#include <cstring>
+#include "windows_compat.h"
 #else
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -46,14 +45,7 @@ Sint32 pos_quadratic(Sint32 a, Sint32 b, Sint32 c)
 
 Uint32 getTime()
 {
-#if __linux__
-	static auto t0 = std::chrono::steady_clock::now();
-
-	auto dt = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - t0);
-	return (Uint32)(dt.count() / 10);
-#else
 	return GetTickCount() / 10;
-#endif
 }
 
 
@@ -71,7 +63,7 @@ bool isAlphaNumeric(char c)
 			(c >= '0' && c <= '9')  );
 }
 
-bool isNumeric(char *buffer)
+bool isNumeric(const char *buffer)
 {
 	if (!*buffer) return false;
 
@@ -241,7 +233,7 @@ String getString(Uint32 number, Uint32 base, Uint16 leading, bool sign)
 	return ret;
 }
 
-int getInteger(char *number, int base)
+int getInteger(const char *number, int base)
 {
 	bool neg = (*number == '-');
 

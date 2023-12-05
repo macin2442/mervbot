@@ -19,19 +19,23 @@ Uint32 getPrivateProfile32(const char *section, const char *key, const char *def
 	return getInteger(buffer, 10);
 }
 
-Uint32 getSetting32(HKEY baseKey, const char *path, const char *value)
+Uint32 getSetting32(HKEY baseKey, const char *path, const char *value, uint32_t default_value)
 {
 	// Open the key
 	HKEY key;			// Handle to a session with a registry key
 
-	RegOpenKey((HKEY)baseKey, path, &key);
+	if (RegOpenKey((HKEY)baseKey, path, &key) != ERROR_SUCCESS) {
+		return default_value;
+	}
 
 	// Get a value
 	DWORD buffer;		// Results of transaction will go here
 	DWORD buflen = 4;	// Length of the buffer is 4, naturally
 	DWORD type;			// Type will contain type of data transfered
 
-	RegQueryValueEx(key, value, NULL, &type, (BYTE*)&buffer, &buflen);
+	if (RegQueryValueEx(key, value, NULL, &type, (BYTE*)&buffer, &buflen) != ERROR_SUCCESS) {
+		return default_value;
+	}
 
 	// Close the key
 	RegCloseKey(key);
@@ -77,7 +81,7 @@ void getServiceString(HKEY baseKey, const char *path, const char *value, char *b
 void addNewsChecksum(Uint32 Checksum)
 {
 	// Extract location to write the new checksum
-	Uint32 Position = getSetting32(HKEY_CURRENT_USER, "Software\\Virgin\\SubSpace\\News", "Pos");
+	Uint32 Position = getSetting32(HKEY_CURRENT_USER, "Software\\Virgin\\SubSpace\\News", "Pos", 0);
 
 	String s;
 	if (Position < 1000)
@@ -102,6 +106,9 @@ void addNewsChecksum(Uint32 Checksum)
 
 void setWindowTitle(char *title)
 {
+#if __linux__
+	// no-op
+#else
 	char fileName[532];
 	Sint32 len = GetModuleFileName(GetModuleHandle(NULL), fileName, 532);
 
@@ -128,6 +135,7 @@ void setWindowTitle(char *title)
 			SetWindowText(FindWindow(NULL, fileName + off), title);
 		}
 	}
+#endif
 }
 
 bool readDataLines(char *name, void (*callback)(char *line))
@@ -165,7 +173,7 @@ bool readDataLines(char *name, void (*callback)(char *line))
 	return true;
 }
 
-bool decompress_to_file(char *name, void *buffer, Uint32 buffer_length)
+bool decompress_to_file(const char *name, void *buffer, unsigned long buffer_length)
 {
 	if (buffer_length <= 0) return false;
 
@@ -174,7 +182,7 @@ bool decompress_to_file(char *name, void *buffer, Uint32 buffer_length)
 	if (!file) return false;
 
 	BYTE  *res	  = NULL;
-	Uint32 length = buffer_length * 2,
+	unsigned long length = buffer_length * 2,
 		   status = 0;
 
 	do

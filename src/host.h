@@ -55,7 +55,7 @@ struct reliableMessage
 	void setTime();							// Update lastSend
 
 	reliableMessage(Uint32 nACK_ID,
-					char *nmsg,
+					const char *nmsg,
 					Uint32 nlen);			// Fill fields
 };
 
@@ -65,7 +65,7 @@ struct clusterMessage
 	char msg[PACKET_MAX_LENGTH];			// Message without the reliable header
 	Uint32 len;								// Message length
 
-	clusterMessage(char *nmsg,
+	clusterMessage(const char *nmsg,
 				   Uint32 nlen);			// Fill fields
 };
 
@@ -78,7 +78,7 @@ struct hostMessage
 
 	BYTE getType(bool special);				// Return type byte
 
-	hostMessage(char *msg,
+	hostMessage(const char *msg,
 				Uint32 len,
 				Host *src);					// Fill fields
 	~hostMessage();							// Deallocate msg memory
@@ -92,7 +92,7 @@ struct loggedChat
 	Uint16 ident;
 	String msg;
 
-	loggedChat(BYTE mode, BYTE snd, Uint16 ident, char *msg);
+	loggedChat(BYTE mode, BYTE snd, Uint16 ident, const char *msg);
 };
 
 
@@ -116,13 +116,13 @@ public:
 	/* Socket */
 	UDPSocket socket;						// Socket wrapper
 	INADDR remote;							// sockaddr wrapper
-	void send(char *msg, Uint32 len);		// Simply encrypt and send to host
+	void send(const char *msg, Uint32 len);		// Simply encrypt and send to host
 
 	/* Inbox */
 	Uint32 remoteStep;						// Next ACK_ID expected
 	_linkedlist <reliableMessage> received;	// Messages waiting for a lost packet
 	void checkReceived(Uint32 ACK_ID,
-					   char *msg,
+					   const char *msg,
 					   Uint32 len);			// Process queued messages or queue another
 	void sendACK(Uint32 ACK_ID);			// Send an acknowledgement
 
@@ -135,7 +135,7 @@ public:
 
 	_linkedlist <reliableMessage> queued;	// Send-queue overflows go here
 	void sendNext();						// Start sending a queued message
-	bool queue(char *msg, Uint32 len);		// Add to the queued list
+	bool queue(const char *msg, Uint32 len);		// Add to the queued list
 
 	/* General Commands */
 	_jumptable <hostMessage> generalRouter;	// Server/Client protocol
@@ -192,10 +192,10 @@ public:
 	String *loggedChatter[MAX_LOG_LINES];	// Log of bot chatter for !log
 #endif
 
-	void postChat(BYTE mode, BYTE snd, Uint16 ident, char *msg);
+	void postChat(BYTE mode, BYTE snd, Uint16 ident, const char *msg);
 
-	void tryChat(BYTE mode, BYTE snd, Uint16 ident, char *msg);
-	void addChatLog(BYTE mode, BYTE snd, Uint16 ident, char *msg);
+	void tryChat(BYTE mode, BYTE snd, Uint16 ident, const char *msg);
+	void addChatLog(BYTE mode, BYTE snd, Uint16 ident, const char *msg);
 	bool sendNextLoggedChat();
 	void doChatLog();
 
@@ -208,7 +208,7 @@ public:
 
 	// Carpool messages
 	void beginCluster();										// Prepare for message carpooling
-		void post(char *msg, Uint32 len, bool reliable);		// Queue for clustering
+		void post(const char *msg, Uint32 len, bool reliable);		// Queue for clustering
 		void post(clientMessage *cm, bool reliable);			// Queue for clustering
 		void postRR(clientMessage *cm);							// Post, release, reliable
 		void postRU(clientMessage *cm);							// Post, release, unreliable
@@ -231,7 +231,7 @@ public:
 
 	// Routing
 	void gotPacket(char *msg, Uint32 len);
-	void gotMessage(char *msg, Uint32 len);
+	void gotMessage(const char *msg, Uint32 len);
 	void gotMessage(hostMessage *msg);
 	void gotSpecialMessage(hostMessage *msg);
 
@@ -239,18 +239,18 @@ public:
 	void gotEncryptRequest(Uint32 key, Uint16 prot);
 	void gotEncryptResponse(Uint32 key);
 	void gotEncryptResponse(Uint32 key, BYTE mudge);
-	void gotReliable(Uint32 id, char *msg, Uint32 len);
+	void gotReliable(Uint32 id, const char *msg, Uint32 len);
 	void gotACK(Uint32 id);
 	void gotSyncRequest(Uint32 time);
 	void gotSyncRequest(Uint32 time, Uint32 sent, Uint32 recv);
 	void gotSyncResponse(Uint32 pingTime, Uint32 pongTime);
 	void gotDisconnect();
-	void gotChunkBody(char *msg, Uint32 len);
-	void gotChunkTail(char *msg, Uint32 len);
-	void gotBigChunk(Uint32 total, char *msg, Uint32 len);
+	void gotChunkBody(const char *msg, Uint32 len);
+	void gotChunkTail(const char *msg, Uint32 len);
+	void gotBigChunk(Uint32 total, const char *msg, Uint32 len);
 	void gotCancelDownload();
 	void gotCancelDownloadAck();
-	void gotCluster(char *msg, Uint32 len);
+	void gotCluster(const char *msg, Uint32 len);
 
 	// Core out
 	void connect(bool postDisconnect);
@@ -301,24 +301,24 @@ public:
 	void resetFlagTiles();
 
 	// Chat
-	void sendPrivate(Player *player, char *msg);
-	void sendPrivate(Player *player, BYTE snd, char *msg);
+	void sendPrivate(Player *player, const char *msg);
+	void sendPrivate(Player *player, BYTE snd, const char *msg);
 
-	void sendTeam(char *msg);
-	void sendTeam(BYTE snd, char *msg);
+	void sendTeam(const char *msg);
+	void sendTeam(BYTE snd, const char *msg);
 
-	void sendTeamPrivate(Uint16 team, char *msg);
-	void sendTeamPrivate(Uint16 team, BYTE snd, char *msg);
+	void sendTeamPrivate(Uint16 team, const char *msg);
+	void sendTeamPrivate(Uint16 team, BYTE snd, const char *msg);
 
-	void sendPublic(char *msg);
-	void sendPublic(BYTE snd, char *msg);
+	void sendPublic(const char *msg);
+	void sendPublic(BYTE snd, const char *msg);
 
-	void sendPublicMacro(char *msg);
-	void sendPublicMacro(BYTE snd, char *msg);
+	void sendPublicMacro(const char *msg);
+	void sendPublicMacro(BYTE snd, const char *msg);
 
-	void sendChannel(char *msg);			// #;Message
-	void sendRemotePrivate(char *msg);		// :Name:Messsage
-	void sendRemotePrivate(char *name, char *msg);
+	void sendChannel(const char *msg);			// #;Message
+	void sendRemotePrivate(const char *msg);		// :Name:Messsage
+	void sendRemotePrivate(const char *name, const char *msg);
 
 	// Player
 	_linkedlist <Player> playerlist;
@@ -335,21 +335,21 @@ public:
 	void spectateNext();
 	void spectate(Player *p);
 
-	Player *addPlayer(Uint16 ident, char *name, char *squad, Uint32 flagPoints, Uint32 killPoints, Uint16 team, Uint16 wins, Uint16 losses, BYTE ship, bool acceptsAudio, Uint16 flagCount);
+	Player *addPlayer(Uint16 ident, const char *name, const char *squad, Uint32 flagPoints, Uint32 killPoints, Uint16 team, Uint16 wins, Uint16 losses, BYTE ship, bool acceptsAudio, Uint16 flagCount);
 	Player *getPlayer(Uint16 ident);
 	void killPlayer(Player *p);
 
 	void killTurret(Player *p);		// Shaking off turrets
 	void killTurreter(Player *p);	// Detaching from a host
 
-	Player *findPlayer(char *name);
+	Player *findPlayer(const char *name);
 //	Player *findTeammate(Player *excluded, Uint16 team);
 //	Player *findHighScorer(Player *excluded, Uint16 team);
 
 //	Uint16 teamPopulation(Uint16 team);
 
 	void revokeAccess(BYTE access);		// Reset player access for everyone under given level
-	void revokeAccess(char *name);		// Reset player access for one player given name
+	void revokeAccess(const char *name);		// Reset player access for one player given name
 
 	// Statistics
 	BOT_INFO botInfo;
@@ -390,15 +390,15 @@ public:
 	BYTE map[TILE_MAX_LINEAR];
 	arenaSettings settings;
 
-	void changeArena(char *name);
+	void changeArena(const char *name);
 	void changeCoordinates();
 
 	// Logs
 //	MDIChild *terminal;
 
 	void logEvent(const char *format, ...);
-	void logIncoming(char *packet, Uint32 len);
-	void logOutgoing(char *packet, Uint32 len);
+	void logIncoming(const char *packet, Uint32 len);
+	void logOutgoing(const char *packet, Uint32 len);
 };
 
 String getTimeString();

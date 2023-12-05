@@ -24,7 +24,7 @@ public:
 	void setLimit(Uint32 max);					// Set append limit (too high and you run the
 												// risk of allowing Denial of Service attacks)
 
-	void addMessage(char * msg, Uint32 len);	// Append some bytes
+	void addMessage(const char * msg, Uint32 len);	// Append some bytes
 
 	void deleteMessage();						// Delete the current transmission
 };

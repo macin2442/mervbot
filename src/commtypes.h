@@ -11,11 +11,11 @@
 bool invalidName(char *name);
 bool invalidArena(char *name);
 
-bool validRemotePrivate(char *command);
+bool validRemotePrivate(const char *command);
 char *getRemoteCommand(char *text);
 char *getRemoteName(char *text);
 
-bool validRemoteChat(char *command);
+bool validRemoteChat(const char *command);
 char *getChatCommand(char *text);
 char *getChatName(char *text);
 
@@ -24,7 +24,7 @@ struct _switch
 	char type;		// !command -a_=blah-s blah
 	char *param;	// !command -at=____-s blah
 
-	_switch(char t, char *p);
+	_switch(char t, const char *p);
 	~_switch();
 };
 
@@ -35,13 +35,13 @@ struct Command
 	char *cmd;		// !_______ -at=blah-s blah
 	char *final;	// !command -at=blah-s ____
 
-	Command(char *msg);				// Parse
+	Command(const char *msg);				// Parse
 	~Command();						// Clean up
 
-	bool check(char *msg);			// Check against cmd
-	bool checkParam(char *msg);		// Check against final
+	bool check(const char *msg);			// Check against cmd
+	bool checkParam(const char *msg);		// Check against final
 
-	void addParam(char *msg);		// Add a switch
+	void addParam(const char *msg);		// Add a switch
 	_switch *getParam(char type);	// Check against switches
 };
 

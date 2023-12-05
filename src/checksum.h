@@ -21,11 +21,11 @@ void generate16(Uint32 *offset, Uint32 key);		// dictionary-generating
 void generate64(Uint32 *offset, Uint32 key);		// algorithms from
 void generateDictionary(Uint32 *offset, Uint32 key);// the 4th dimension!
 
-Uint32 getFileChecksum(void *buffer,
+Uint32 getFileChecksum(const void *buffer,
 					   Uint32 *dictionary,
 					   Uint32 len);					// Produce a checksum of file contents
 
-Uint32 getFileChecksum(char *fileName,
+Uint32 getFileChecksum(const char *fileName,
 					   Uint32 *dictionary);			// Produce a checksum of file contents
 
 Uint32 generateLevelChecksum(Uint32 key,

@@ -2,6 +2,10 @@
 #include "botinfo.h"
 #include "system.h"
 #include "algorithms.h"
+#if __linux__
+#include <time.h>
+#endif
+#include <iostream>
 
 
 //////// Bot descriptor ////////
@@ -54,45 +58,72 @@ void BOT_INFO::resetSystemInfo()
 		char buffer[40];
 
 		// Get platform
+#if __linux__
+		Uint32 PlatformId = VER_PLATFORM_WIN32_NT;
+#else
 		OSVERSIONINFO osvi;
 		osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 		GetVersionEx(&osvi);
 		Uint32 PlatformId = osvi.dwPlatformId;
+#endif
 
 		// Prepare for registry access
 		HKEY key;			// Handle to a session with a registry key
-		Uint32 buflen;		// Length of the buffer
-		Uint32 type;		// Type will contain type of data transfered
+		DWORD buflen;		// Length of the buffer
+		DWORD type;		// Type will contain type of data transfered
 
 		if (PlatformId != VER_PLATFORM_WIN32_NT)
 		{
 			// Look up Windows 9x or Windows 3.1 version information
-			RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", (HKEY*)&key);
+			if (RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", (HKEY*)&key) != ERROR_SUCCESS) {
+				std::cerr << "ERROR: Cannot open HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion." << std::endl;
+				std::exit(EXIT_FAILURE);
+			}
 		}
 		else
 		{
 			// Look up Windows NT version information
-			RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", (HKEY*)&key);
+			if (RegOpenKey(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", (HKEY*)&key) != ERROR_SUCCESS) {
+				std::cerr << "ERROR: Cannot open HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion." << std::endl;
+				std::exit(EXIT_FAILURE);
+			}
 		}
 
 		buflen = 40;
-		RegQueryValueEx(key, "RegisteredOwner", NULL, &type, (BYTE*)&buffer, &buflen);
-		strncpy(regName, buffer, 40);
+		if (RegQueryValueEx(key, "RegisteredOwner", NULL, &type, (BYTE*)&buffer, &buflen) != ERROR_SUCCESS) {
+			std::cerr << "ERROR: Cannot query value RegisteredOwner." << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
+		strncpy(regName, buffer, buflen);
+		// NOTE: RegisteredOwner as well as RegisteredOrganization are empty on wine
 
 		buflen = 40;
-		RegQueryValueEx(key, "RegisteredOrganization", NULL, &type, (BYTE*)&buffer, &buflen);
-		strncpy(regOrg, buffer, 40);
+		if (RegQueryValueEx(key, "RegisteredOrganization", NULL, &type, (BYTE*)&buffer, &buflen) != ERROR_SUCCESS) {
+			std::cerr << "ERROR: Cannot query value RegisteredOrganization." << std::endl;
+			std::exit(EXIT_FAILURE);
+		}
+		strncpy(regOrg, buffer, buflen);
 
 		RegCloseKey(key);
 	}
 
 	// Timezone Bias
+#if __linux__
+	{
+		time_t t = time(NULL);
+		struct tm lt = {0};
+
+		localtime_r(&t, &lt);
+		timeZoneBias = lt.tm_gmtoff / 60;
+	}
+#else
 	TIME_ZONE_INFORMATION tzi;
 	GetTimeZoneInformation(&tzi);
 	timeZoneBias = (SHORT)tzi.Bias;
+#endif
 
 	// Permission ID
-	permissionID = getSetting32(HKEY_LOCAL_MACHINE, "SOFTWARE", "D2");
+	permissionID = getSetting32(HKEY_LOCAL_MACHINE, "SOFTWARE", "D2", (Uint32)-1);
 
 	// Install some SubSpace registry keys
 	if (permissionID == -1)
@@ -107,11 +138,15 @@ void BOT_INFO::resetSystemInfo()
 	}
 
 	// Machine ID
+#if __linux__
+	machineID = 0;
+#else
 	GetVolumeInformation("C:\\", NULL, 0, &machineID, NULL, NULL, NULL, 0);
+#endif
 
 	if (!machineID || machineID == 1 || machineID == -1)
 	{
-		machineID = getSetting32(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", "ProductCode");
+		machineID = getSetting32(HKEY_LOCAL_MACHINE, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion", "ProductCode", 0);
 
 		if (!machineID || machineID == 1 || machineID == -1)
 		{

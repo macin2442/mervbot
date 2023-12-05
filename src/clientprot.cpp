@@ -3223,7 +3223,7 @@ clientMessage *generateDeath			(Uint16 player, Uint16 bounty)
 	return ret;
 }
 
-clientMessage *generateChat				(Chat_Modes type, Chat_SoundBytes soundcode, Uint16 player, char *text)
+clientMessage *generateChat				(Chat_Modes type, Chat_SoundBytes soundcode, Uint16 player, const char *text)
 {	Uint32 len = limit(STRLEN(text), 250);
 	clientMessage *ret = new clientMessage(6 + len);
 	if (ret == NULL) return NULL;
@@ -3246,7 +3246,7 @@ clientMessage *generateChat				(Chat_Modes type, Chat_SoundBytes soundcode, Uint
 	return ret;
 }
 
-clientMessage *generateRegForm			(char *name, char *email, char *city, char *state, RegForm_Sex sex, BYTE age, bool playAtHome, bool playAtWork, bool playAtSchool, Uint32 processor, char *regName, char *regOrg)
+clientMessage *generateRegForm			(const char *name, const char *email, const char *city, const char *state, RegForm_Sex sex, BYTE age, bool playAtHome, bool playAtWork, bool playAtSchool, Uint32 processor, const char *regName, const char *regOrg)
 {	clientMessage *ret = new clientMessage(766);
 	if (ret == NULL) return NULL;
 	ret->clear();
@@ -3597,7 +3597,7 @@ clientMessage *generateNewsRequest		()
 	return ret;
 }
 
-clientMessage *generateArenaLogin		(char *arena, Ship_Types ship, Uint16 xres, Uint16 yres, bool allowAudio)
+clientMessage *generateArenaLogin		(const char *arena, Ship_Types ship, Uint16 xres, Uint16 yres, bool allowAudio)
 {	clientMessage *ret = new clientMessage(26);
 	if (ret == NULL) return NULL;
 	ret->clear();

@@ -592,10 +592,10 @@ clientMessage *generateChangeTeam		(Uint16 team);
 clientMessage *generateChangeBanner		(BYTE *buffer);
 clientMessage *generateDeath			(Uint16 player, Uint16 bounty);
 clientMessage *generateChat				(Chat_Modes type, Chat_SoundBytes soundcode, Uint16 player,
-										 char *text);	// Limit 200 on message length
-clientMessage *generateRegForm			(char *name, char *email, char *city, char *state,
+										 const char *text);	// Limit 200 on message length
+clientMessage *generateRegForm			(const char *name, const char *email, const char *city, const char *state,
 										 RegForm_Sex sex, BYTE age, bool playAtHome, bool playAtWork,
-										 bool playAtSchool, Uint32 processor, char *regName, char *regOrg);
+										 bool playAtSchool, Uint32 processor, const char *regName, const char *regOrg);
 clientMessage *generateKoTHReset		();
 clientMessage *generateSecurityChecksum	(Uint32 parameterChecksum, Uint32 EXEChecksum, Uint32 levelChecksum,
 										 Uint16 S2C_RelOut, Uint16 ping, Uint16 avgPing, Uint16 lowPing,
@@ -617,7 +617,7 @@ clientMessage *generateFlagDrop			();
 clientMessage *generateEXERequest		();
 clientMessage *generateLevelRequest		();
 clientMessage *generateNewsRequest		();
-clientMessage *generateArenaLogin		(char *arena, Ship_Types ship, Uint16 xres, Uint16 yres, bool allowAudio);
+clientMessage *generateArenaLogin		(const char *arena, Ship_Types ship, Uint16 xres, Uint16 yres, bool allowAudio);
 clientMessage *generateArenaLeave		();
 clientMessage *generateAttachRequest	(Uint16 player);
 clientMessage *generateBrickDrop		(Uint16 xtile, Uint16 ytile);

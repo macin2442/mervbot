@@ -35,7 +35,7 @@ void chunkBuffer::setLimit(Uint32 max)
 	maximumLength = max;
 }
 
-void chunkBuffer::addMessage(char *msg, Uint32 len)
+void chunkBuffer::addMessage(const char *msg, Uint32 len)
 {
 	Uint32 newlen = currentLength + len;
 

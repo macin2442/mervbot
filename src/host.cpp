@@ -18,7 +18,7 @@ using namespace std;
 
 //////// Host messaging ////////
 
-hostMessage::hostMessage(char *nmsg, Uint32 nlen, Host *nsrc)
+hostMessage::hostMessage(const char *nmsg, Uint32 nlen, Host *nsrc)
 {
 	msg = new char[nlen];
 	memcpy(msg, nmsg, nlen);
@@ -43,7 +43,7 @@ BYTE hostMessage::getType(bool special)
 
 //////// Cluster message ////////
 
-clusterMessage::clusterMessage(char *nmsg, Uint32 nlen)
+clusterMessage::clusterMessage(const char *nmsg, Uint32 nlen)
 {
 	if (nlen > PACKET_MAX_LENGTH)
 	{
@@ -58,7 +58,7 @@ clusterMessage::clusterMessage(char *nmsg, Uint32 nlen)
 
 //////// Logged chat message ////////
 
-loggedChat::loggedChat(BYTE mmode, BYTE ssnd, Uint16 iident, char *mmsg)
+loggedChat::loggedChat(BYTE mmode, BYTE ssnd, Uint16 iident, const char *mmsg)
 : msg(mmsg)
 {
 	mode  = mmode;
@@ -89,7 +89,7 @@ void clientMessage::clear()
 
 //////// Reliable message ////////
 
-reliableMessage::reliableMessage(Uint32 nACK_ID, char *nmsg, Uint32 nlen)
+reliableMessage::reliableMessage(Uint32 nACK_ID, const char *nmsg, Uint32 nlen)
 {
 	if (nlen > PACKET_MAX_LENGTH)
 	{
@@ -105,7 +105,7 @@ reliableMessage::reliableMessage(Uint32 nACK_ID, char *nmsg, Uint32 nlen)
 
 void reliableMessage::setTime()
 {
-	lastSend = GetTickCount() / 10;
+	lastSend = getTime();
 }
 
 
@@ -143,7 +143,7 @@ void Host::postRU(clientMessage *cm)
 	}
 }
 
-void Host::post(char *msg, Uint32 len, bool reliable)
+void Host::post(const char *msg, Uint32 len, bool reliable)
 {
 	char buffer[PACKET_MAX_LENGTH];
 
@@ -299,7 +299,7 @@ void Host::endCluster()
 
 //////// Reliable messaging ////////
 
-bool Host::queue(char *msg, Uint32 len)
+bool Host::queue(const char *msg, Uint32 len)
 {	// Returns false if the message shouldn't be sent immediately
 	reliableMessage *m = new reliableMessage(getLong(msg, 2), msg, len);
 
@@ -374,7 +374,7 @@ void Host::sendNext()
 	}
 }
 
-void Host::checkReceived(Uint32 ACK_ID, char *msg, Uint32 len)
+void Host::checkReceived(Uint32 ACK_ID, const char *msg, Uint32 len)
 {
 	// Ignore if we've already processed it
 	if (ACK_ID < remoteStep)
@@ -466,7 +466,7 @@ void Host::sendQueued()
 
 //////// Host messaging ////////
 
-void Host::send(char *msg, Uint32 len)
+void Host::send(const char *msg, Uint32 len)
 {
 	char packet[PACKET_MAX_LENGTH];
 
@@ -486,12 +486,12 @@ void Host::send(char *msg, Uint32 len)
 
 //////// Chat ////////
 
-void Host::postChat(BYTE mode, BYTE snd, Uint16 ident, char *msg)
+void Host::postChat(BYTE mode, BYTE snd, Uint16 ident, const char *msg)
 {
 	postRR(generateChat((Chat_Modes)mode, (Chat_SoundBytes)snd, ident, msg));
 }
 
-void Host::tryChat(BYTE mode, BYTE snd, Uint16 ident, char *msg)
+void Host::tryChat(BYTE mode, BYTE snd, Uint16 ident, const char *msg)
 {
 	if (hasSysOp || (*msg == '*'))
 		postChat(mode, snd, ident, msg);
@@ -499,27 +499,27 @@ void Host::tryChat(BYTE mode, BYTE snd, Uint16 ident, char *msg)
 		addChatLog(mode, snd, ident, msg);
 }
 
-void Host::sendPrivate(Player *player, BYTE snd, char *msg)
+void Host::sendPrivate(Player *player, BYTE snd, const char *msg)
 {
 	tryChat(MSG_Private, snd, player->ident, msg);
 }
 
-void Host::sendPrivate(Player *player, char *msg)
+void Host::sendPrivate(Player *player, const char *msg)
 {
 	tryChat(MSG_Private, SND_None, player->ident, msg);
 }
 
-void Host::sendTeam(char *msg)
+void Host::sendTeam(const char *msg)
 {
 	tryChat(MSG_Team, SND_None, 0, msg);
 }
 
-void Host::sendTeam(BYTE snd, char *msg)
+void Host::sendTeam(BYTE snd, const char *msg)
 {
 	tryChat(MSG_Team, snd, 0, msg);
 }
 
-void Host::sendTeamPrivate(Uint16 team, char *msg)
+void Host::sendTeamPrivate(Uint16 team, const char *msg)
 {
 	_listnode <Player> *parse = playerlist.head;
 	while (parse)
@@ -534,7 +534,7 @@ void Host::sendTeamPrivate(Uint16 team, char *msg)
 	}
 }
 
-void Host::sendTeamPrivate(Uint16 team, BYTE snd, char *msg)
+void Host::sendTeamPrivate(Uint16 team, BYTE snd, const char *msg)
 {
 	_listnode <Player> *parse = playerlist.head;
 	while (parse)
@@ -549,37 +549,37 @@ void Host::sendTeamPrivate(Uint16 team, BYTE snd, char *msg)
 	}
 }
 
-void Host::sendPublic(char *msg)
+void Host::sendPublic(const char *msg)
 {
 	tryChat(MSG_Public, SND_None, 0, msg);
 }
 
-void Host::sendPublic(BYTE snd, char *msg)
+void Host::sendPublic(BYTE snd, const char *msg)
 {
 	tryChat(MSG_Public, snd, 0, msg);
 }
 
-void Host::sendPublicMacro(char *msg)
+void Host::sendPublicMacro(const char *msg)
 {
 	tryChat(MSG_PublicMacro, SND_None, 0, msg);
 }
 
-void Host::sendPublicMacro(BYTE snd, char *msg)
+void Host::sendPublicMacro(BYTE snd, const char *msg)
 {
 	tryChat(MSG_PublicMacro, snd, 0, msg);
 }
 
-void Host::sendChannel(char *msg)
+void Host::sendChannel(const char *msg)
 {
 	tryChat(MSG_Channel, SND_None, 0, msg);
 }
 
-void Host::sendRemotePrivate(char *msg)
+void Host::sendRemotePrivate(const char *msg)
 {
 	tryChat(MSG_RemotePrivate, SND_None, 0, msg);
 }
 
-void Host::sendRemotePrivate(char *name, char *msg)
+void Host::sendRemotePrivate(const char *name, const char *msg)
 {
 	String s;
 	s += ":";
@@ -1048,7 +1048,7 @@ void Host::loadTurfFlags()
 
 // Players
 
-Player *Host::addPlayer(Uint16 ident, char *name, char *squad, Uint32 flagPoints, Uint32 killPoints, Uint16 team, Uint16 wins, Uint16 losses, BYTE ship, bool acceptsAudio, Uint16 flagCount)
+Player *Host::addPlayer(Uint16 ident, const char *name, const char *squad, Uint32 flagPoints, Uint32 killPoints, Uint16 team, Uint16 wins, Uint16 losses, BYTE ship, bool acceptsAudio, Uint16 flagCount)
 {
 	Player *p = new Player(ident, name, squad, flagPoints, killPoints, team, wins, losses, ship, acceptsAudio, flagCount);
 	if (p)
@@ -1132,7 +1132,7 @@ void Host::revokeAccess(BYTE access)
 	}
 }
 
-void Host::revokeAccess(char *name)
+void Host::revokeAccess(const char *name)
 {
 	Player *p = findPlayer(name);
 	if (p)
@@ -1141,7 +1141,7 @@ void Host::revokeAccess(char *name)
 	}
 }
 
-Player *Host::findPlayer(char *name)
+Player *Host::findPlayer(const char *name)
 {
 	_listnode <Player> *parse = playerlist.head;
 
@@ -1268,7 +1268,7 @@ void Host::resetIcons()
 
 //////// Logged chat messaging ////////
 
-void Host::addChatLog(BYTE mode, BYTE snd, Uint16 ident, char *msg)
+void Host::addChatLog(BYTE mode, BYTE snd, Uint16 ident, const char *msg)
 {
 	loggedChat *lc = new loggedChat((Chat_Modes)mode, snd, ident, msg);
 	if (lc)
@@ -1488,7 +1488,7 @@ void Host::resetArena()
 	paranoid = false;
 }
 
-void Host::changeArena(char *name)
+void Host::changeArena(const char *name)
 {
 	if (inArena)
 	{
@@ -1861,7 +1861,7 @@ void Host::gotPacket(char *msg, Uint32 len)
 	lastRecv = getTime();
 }
 
-void Host::gotMessage(char *msg, Uint32 len)
+void Host::gotMessage(const char *msg, Uint32 len)
 {
 	hostMessage *m = new hostMessage(msg, len, this);
 	if (m)
@@ -2002,7 +2002,7 @@ void Host::gotEncryptResponse(Uint32 key, BYTE mudge)
 	gotEncryptResponse(key);
 }
 
-void Host::gotReliable(Uint32 id, char *msg, Uint32 len)
+void Host::gotReliable(Uint32 id, const char *msg, Uint32 len)
 {
 	sendACK(id);
 	checkReceived(id, msg, len);
@@ -2086,12 +2086,12 @@ void Host::gotDisconnect()
 	connect(false);
 }
 
-void Host::gotChunkBody(char *msg, Uint32 len)
+void Host::gotChunkBody(const char *msg, Uint32 len)
 {
 	little.addMessage(msg, len);
 }
 
-void Host::gotChunkTail(char *msg, Uint32 len)
+void Host::gotChunkTail(const char *msg, Uint32 len)
 {
 	little.addMessage(msg, len);
 
@@ -2102,7 +2102,7 @@ void Host::gotChunkTail(char *msg, Uint32 len)
 	}
 }
 
-void Host::gotBigChunk(Uint32 total, char *msg, Uint32 len)
+void Host::gotBigChunk(Uint32 total, const char *msg, Uint32 len)
 {
 	if (ftLength == 0)
 	{
@@ -2152,7 +2152,7 @@ void Host::gotCancelDownloadAck()
 	// not sure if we really need to worry about this ^_^
 }
 
-void Host::gotCluster(char *msg, Uint32 len)
+void Host::gotCluster(const char *msg, Uint32 len)
 {
 	Uint32 index = 0;
 
@@ -2165,7 +2165,7 @@ void Host::gotCluster(char *msg, Uint32 len)
 			return;
 		}
 
-		char *this_msg = msg + index;
+		const char *this_msg = msg + index;
 
 		gotMessage(this_msg, this_len);
 
@@ -2440,7 +2440,7 @@ void Host::logLogin()
 	numTries = botInfo.db->maxTries;
 }
 
-String makePacketLog(char *prefix, char *packet, Uint32 len)
+String makePacketLog(const char *prefix, const char *packet, Uint32 len)
 {
 	String s;
 	char stringRep[17];
@@ -2486,14 +2486,14 @@ String makePacketLog(char *prefix, char *packet, Uint32 len)
 	return s;
 }
 
-void Host::logIncoming(char *packet, Uint32 len)
+void Host::logIncoming(const char *packet, Uint32 len)
 {
 	if (!logging) return;
 
 	logBuffer += makePacketLog("IN  ", packet, len);
 }
 
-void Host::logOutgoing(char *packet, Uint32 len)
+void Host::logOutgoing(const char *packet, Uint32 len)
 {
 	if (!logging) return;
 

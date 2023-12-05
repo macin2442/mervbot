@@ -6,27 +6,23 @@
 #ifndef DATATYPES_H
 #define DATATYPES_H
 
-typedef unsigned char	 BYTE;
-typedef unsigned char	 uchar;
-typedef unsigned char	 Uint8;
-typedef unsigned short	 ushort;
-typedef unsigned short	 Uint16;
-typedef unsigned int	 uint;
-typedef unsigned long	 ulong;
-typedef unsigned long	 Uint32;
+#include <cstdint>
 
-typedef signed char		 Sint8;
-typedef signed short	 Sint16;
-typedef signed long		 Sint32;
+typedef uint8_t BYTE;
+typedef unsigned char uchar;
+typedef uint8_t Uint8;
+typedef unsigned short ushort;
+typedef uint16_t Uint16;
+typedef unsigned int uint;
+typedef unsigned long ulong;
+typedef uint32_t Uint32;
 
-// from Cyan~Fire's MinGW patches
-#ifdef __GNUC__
-	typedef signed long long	Sint64;
-	typedef unsigned long long	Uint64;
-#else
-	typedef signed __int64	 Sint64;
-	typedef unsigned __int64 Uint64;
-#endif
+typedef int8_t Sint8;
+typedef int16_t Sint16;
+typedef int32_t Sint32;
+
+typedef int64_t Sint64;
+typedef uint64_t Uint64;
 
 #ifndef TwoPI
 	#define TwoPI 6.2831853072
@@ -73,15 +69,15 @@ union _regs
 };
 
 
-Uint32 getLong(BYTE *Message, const Uint32 Offset);			// Get a LONG from a BYTE * field
+Uint32 getLong(const BYTE *Message, const Uint32 Offset);			// Get a LONG from a BYTE * field
 
-Uint16 getShort(BYTE *Message, const Uint32 Offset);		// Get a SHORT from a BYTE * field
+Uint16 getShort(const BYTE *Message, const Uint32 Offset);		// Get a SHORT from a BYTE * field
 
-Uint32 getLong(char *Message, const Uint32 Offset);			// Get a LONG from a char * field
+Uint32 getLong(const char *Message, const Uint32 Offset);			// Get a LONG from a char * field
 
-Uint16 getShort(char *Message, const Uint32 Offset);		// Get a SHORT from a char * field
+Uint16 getShort(const char *Message, const Uint32 Offset);		// Get a SHORT from a char * field
 
-BYTE getByte(char *Message, const Uint32 Offset);			// Get a BYTE from a char * field
+BYTE getByte(const char *Message, const Uint32 Offset);			// Get a BYTE from a char * field
 
 
 #define TEMPLATE template <class AnonymousStruct>

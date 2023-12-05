@@ -566,11 +566,11 @@ BotEvent makeInit				(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CA
 
 BotEvent makeTick				();
 
-BotEvent makeArenaEnter			(char *name, Player *me, bool biller);
+BotEvent makeArenaEnter			(const char *name, Player *me, bool biller);
 BotEvent makeArenaSettings		(arenaSettings *settings);
 BotEvent makeArenaLeave			();
-BotEvent makeArenaListEntry		(char *name, bool current, int population);
-BotEvent makeArenaListEnd		(char *name, bool current, int population);
+BotEvent makeArenaListEntry		(const char *name, bool current, int population);
+BotEvent makeArenaListEnd		(const char *name, bool current, int population);
 
 BotEvent makePlayerEntering		(Player *p);
 
@@ -605,13 +605,13 @@ BotEvent makeTimedGameOver		(Player *p1, Player *p2, Player *p3, Player *p4, Pla
 
 BotEvent makeSoccerGoal			(int team, int points);
 
-BotEvent makeFile				(char *name);
+BotEvent makeFile				(const char *name);
 
-BotEvent makeChat				(int t, int s, Player *p, char *m);
+BotEvent makeChat				(int t, int s, Player *p, const char *m);
 BotEvent makeLocalHelp			(Player *p, Command *c);
 BotEvent makeLocalCommand		(Player *p, Command *c);
-BotEvent makeRemoteHelp			(char *p, Command *c, int o);
-BotEvent makeRemoteCommand		(char *p, Command *c, int o);
+BotEvent makeRemoteHelp			(const char *p, Command *c, int o);
+BotEvent makeRemoteCommand		(const char *p, Command *c, int o);
 
 BotEvent makeBrickDropped		(int x1, int y1, int x2, int y2, int team);
 
@@ -631,8 +631,8 @@ BotEvent makeObjectModified		(lvzObject *o);
 
 //////// DLL->Bot ////////
 
-BotEvent makeEcho				(char *m);
-BotEvent makeSay				(int t, int s, int i, char *m);
+BotEvent makeEcho				(const char *m);
+BotEvent makeSay				(int t, int s, int i, const char *m);
 
 BotEvent makeShip				(int s);
 BotEvent makeTeam				(int t);
@@ -657,8 +657,8 @@ BotEvent makeFireBall			(int id, short x, short y, short xvel, short yvel);
 BotEvent makeToggleObjects		(Uint16 player, Uint16 *objects, int num_objects);
 BotEvent makeMoveObjects		(Uint16 player, void *objects, int num_objects); // (lvzObject*)objects
 
-BotEvent makeSpawnBot			(char *name, char *password, char *staff, char *arena);
-BotEvent makeChangeArena		(char *name);
+BotEvent makeSpawnBot			(const char *name, const char *password, const char *staff, const char *arena);
+BotEvent makeChangeArena		(const char *name);
 BotEvent makeChangeSettings		(_linkedlist <String> *settings);
 
 #endif	// DLLCORE_H

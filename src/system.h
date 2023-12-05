@@ -18,7 +18,7 @@
 
 Uint32 getPrivateProfile32(const char *section, const char *key, const char *def, const char *path);
 
-Uint32 getSetting32(HKEY baseKey, const char *path, const char *value);
+Uint32 getSetting32(HKEY baseKey, const char *path, const char *value, uint32_t default_value);
 
 void setSetting32(HKEY baseKey, const char *path, const char *value, Uint32 buffer);
 
@@ -34,6 +34,6 @@ void setWindowTitle(char *title);
 bool readDataLines(char *file, void (*callback)(char *line));
 
 // Decompress buffer to a file on disk
-bool decompress_to_file(char *name, void *buffer, Uint32 len);
+bool decompress_to_file(const char *name, void *buffer, unsigned long len);
 
 #endif	// SYSTEM_H

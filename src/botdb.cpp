@@ -296,7 +296,11 @@ BOT_DATABASE::BOT_DATABASE()
 {
 	// Retrieve path
 	GetCurrentDirectory(520, path);
+#if __linux__
+	std::strcat(path, "/");
+#else
 	std::strcat(path, "\\");
+#endif
 	std::strcat(path, INI_NAME);
 
 	lastSave = getTime();

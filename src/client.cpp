@@ -3,10 +3,18 @@
 #include "settings.h"
 //#include "basewin.h"
 
+#if __linux__
+#include "windows_compat.h"
+#else
 #include <conio.h>	// kbhit
+#endif
 #include <stdio.h>
 
+#if __linux__
+int main(int argc, char *argv[])
+#else
 int _cdecl main(int argc, char *argv[])
+#endif
 {
 	/*
 		argv[0] Commandline to exe

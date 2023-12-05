@@ -13,16 +13,20 @@
 
 void beginWinsock()
 {
+#if !__linux__
 	WSADATA wsaData;
 	if (WSAStartup(MAKEWORD(2, 0), &wsaData) == SOCKET_ERROR)
 	{
 		printf("WSAStartup(0x202, &wsaData) error : %s [%i]\n", WSAGetErrorString(WSAGetLastError()), WSAGetLastError());
 	}
+#endif
 }
 
 void endWinsock()
 {
+#if !__linux__
 	WSACleanup();
+#endif
 }
 
 
@@ -82,7 +86,7 @@ SOCKET UDPSocket::create(Uint16 port)
 	return sid;
 }
 
-void UDPSocket::set(Uint32 ip, Uint16 port)
+void UDPSocket::set(DWORD ip, WORD port)
 {
 	remote.set(ip, port);
 }
@@ -107,7 +111,7 @@ UDPPacket *UDPSocket::poll()
 #if !__linux__
 	if (WSAWaitForMultipleEvents(1, &event, false, 0, true) == WSA_WAIT_EVENT_0)
 #else
-	fd_set rfds;
+	fd_set rdfs;
 	struct timeval tv;
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
@@ -116,7 +120,12 @@ UDPPacket *UDPSocket::poll()
 	if (select(sid + 1, &rdfs, NULL, NULL, &tv) > 0)
 #endif
 	{
-		int len, FromLen = sizeof(INADDR);
+		int len;
+#if __linux__
+		socklen_t FromLen = sizeof(INADDR);
+#else
+		int FromLen = sizeof(INADDR);
+#endif
 		INADDR src;
 
 		len = recvfrom(sid, packet.msg, PACKET_MAX_LENGTH, 0, src.getAddress(), &FromLen);
@@ -164,7 +173,11 @@ void INADDR::operator=(INADDR &other)
 char *INADDR::getString()
 {
 	in_addr in;
+#if __linux__
+	in.s_addr = ip;
+#else
 	in.S_un.S_addr = ip;
+#endif
 
 	return inet_ntoa(in);
 }
@@ -275,7 +288,11 @@ Uint32 getnetworkip()
 		in_addr addr;
 		memcpy(&addr, host->h_addr_list[i], sizeof(in_addr));
 
+#if __linux__
+		ip = addr.s_addr;
+#else
 		ip = addr.S_un.S_addr;
+#endif
 		if ((ip & 0x000000FF) == 0x0000007f)
 		{	// 127.*.*.*
 			printf("Non-routable: %s\n", inet_ntoa(addr));

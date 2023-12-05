@@ -51,13 +51,13 @@ BotEvent makeHighFreqTick()
 	return event;
 }
 
-BotEvent makeArenaEnter(char *name, Player *me, bool biller)
+BotEvent makeArenaEnter(const char *name, Player *me, bool biller)
 {
 	BotEvent event;
 
 	event.code = EVENT_ArenaEnter;
 
-	event.p[0] = name;
+	event.p[0] = const_cast<char*>(name);
 	event.p[1] = me;
 	event.p[2] = (void*)biller;
 
@@ -85,26 +85,26 @@ BotEvent makeArenaLeave()
 	return event;
 }
 
-BotEvent makeArenaListEntry(char *name, bool current, int population)
+BotEvent makeArenaListEntry(const char *name, bool current, int population)
 {
 	BotEvent event;
 
 	event.code = EVENT_ArenaListEntry;
 
-	event.p[0] = name;
+	event.p[0] = const_cast<char*>(name);
 	event.p[1] = *(void**)&current;
 	event.p[2] = *(void**)&population;
 
 	return event;
 }
 
-BotEvent makeArenaListEnd(char *name, bool current, int population)
+BotEvent makeArenaListEnd(const char *name, bool current, int population)
 {
 	BotEvent event;
 
 	event.code = EVENT_ArenaListEnd;
 
-	event.p[0] = name;
+	event.p[0] = const_cast<char*>(name);
 	event.p[1] = *(void**)&current;
 	event.p[2] = *(void**)&population;
 
@@ -408,18 +408,18 @@ BotEvent makeSoccerGoal(int team, int points)
 	return event;
 }
 
-BotEvent makeFile(char *name)
+BotEvent makeFile(const char *name)
 {
 	BotEvent event;
 
 	event.code = EVENT_File;
 
-	event.p[0] = name;
+	event.p[0] = const_cast<char*>(name);
 
 	return event;
 }
 
-BotEvent makeChat(int t, int s, Player *p, char *m)
+BotEvent makeChat(int t, int s, Player *p, const char *m)
 {
 	BotEvent event;
 
@@ -428,7 +428,7 @@ BotEvent makeChat(int t, int s, Player *p, char *m)
 	event.p[0] = *(void**)&t;
 	event.p[1] = *(void**)&s;
 	event.p[2] = p;
-	event.p[3] = m;
+	event.p[3] = const_cast<char*>(m);
 
 	return event;
 }
@@ -457,26 +457,26 @@ BotEvent makeLocalCommand(Player *p, Command *c)
 	return event;
 }
 
-BotEvent makeRemoteHelp(char *p, Command *c, int o)
+BotEvent makeRemoteHelp(const char *p, Command *c, int o)
 {
 	BotEvent event;
 
 	event.code = EVENT_RemoteHelp;
 
-	event.p[0] = p;
+	event.p[0] = const_cast<char*>(p);
 	event.p[1] = c;
 	event.p[2] = *(void**)&o;
 
 	return event;
 }
 
-BotEvent makeRemoteCommand(char *p, Command *c, int o)
+BotEvent makeRemoteCommand(const char *p, Command *c, int o)
 {
 	BotEvent event;
 
 	event.code = EVENT_RemoteCommand;
 
-	event.p[0] = p;
+	event.p[0] = const_cast<char*>(p);
 	event.p[1] = c;
 	event.p[2] = *(void**)&o;
 
@@ -549,18 +549,18 @@ BotEvent makeMapLoaded()
 
 //////// DLL->Bot ////////
 
-BotEvent makeEcho(char *m)
+BotEvent makeEcho(const char *m)
 {
 	BotEvent event;
 
 	event.code = EVENT_Echo;
 
-	event.p[0] = m;
+	event.p[0] = const_cast<char*>(m);
 
 	return event;
 }
 
-BotEvent makeSay(int t, int s, int i, char *m)
+BotEvent makeSay(int t, int s, int i, const char *m)
 {
 	BotEvent event;
 
@@ -569,7 +569,7 @@ BotEvent makeSay(int t, int s, int i, char *m)
 	event.p[0] = *(void**)&t;
 	event.p[1] = *(void**)&s;
 	event.p[2] = *(void**)&i;
-	event.p[3] = m;
+	event.p[3] = const_cast<char*>(m);
 
 	return event;
 }
@@ -700,27 +700,27 @@ BotEvent makeDropFlags()
 	return event;
 }
 
-BotEvent makeSpawnBot(char *name, char *password, char *staff, char *arena)
+BotEvent makeSpawnBot(const char *name, const char *password, const char *staff, const char *arena)
 {
 	BotEvent event;
 
 	event.code = EVENT_SpawnBot;
 
-	event.p[0] = name;
-	event.p[1] = password;
-	event.p[2] = staff;
-	event.p[3] = arena;
+	event.p[0] = const_cast<char*>(name);
+	event.p[1] = const_cast<char*>(password);
+	event.p[2] = const_cast<char*>(staff);
+	event.p[3] = const_cast<char*>(arena);
 
 	return event;
 }
 
-BotEvent makeChangeArena(char *name)
+BotEvent makeChangeArena(const char *name)
 {
 	BotEvent event;
 
 	event.code = EVENT_ChangeArena;
 
-	event.p[0] = name;
+	event.p[0] = const_cast<char*>(name);
 
 	return event;
 }

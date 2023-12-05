@@ -87,7 +87,7 @@ bool invalidArena(char *name)
 	return false;
 }
 
-bool validRemoteChat(char *text)
+bool validRemoteChat(const char *text)
 {
 	bool seen = false;
 
@@ -104,7 +104,7 @@ bool validRemoteChat(char *text)
 	return seen;
 }
 
-bool validRemotePrivate(char *text)
+bool validRemotePrivate(const char *text)
 {
 	bool seen = false;
 
@@ -193,7 +193,7 @@ char *getRemoteCommand(char *text)
 
 ///////// Switches ////////
 
-_switch::_switch(char t, char *p)
+_switch::_switch(char t, const char *p)
 {
 	Uint32 len = 0;
 	while (p[len++]);	// len == STRLEN(msg) + 1
@@ -216,7 +216,7 @@ _switch::~_switch()
 
 //////// Command parsing ////////
 
-Command::Command(char *msg)
+Command::Command(const char *msg)
 {
 	Uint32 len = 0;
 	while (msg[len++]);	// len == STRLEN(msg) + 1
@@ -321,7 +321,7 @@ Command::Command(char *msg)
 	}
 }
 
-bool Command::check(char *msg)
+bool Command::check(const char *msg)
 {
 	Uint32 i = 0;
 	char c;
@@ -337,7 +337,7 @@ bool Command::check(char *msg)
 	return true;
 }
 
-bool Command::checkParam(char *msg)
+bool Command::checkParam(const char *msg)
 {
 	Uint32 i = 0;
 	char c;
@@ -370,7 +370,7 @@ _switch *Command::getParam(char type)
 	return NULL;
 }
 
-void Command::addParam(char *msg)
+void Command::addParam(const char *msg)
 {
 	Uint32 index = 0,
 		   len   = 0;

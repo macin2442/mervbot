@@ -33,9 +33,9 @@ enum Operator_Level
 	OP_God					// ...Some other ways to say "Owner"
 };
 
-char *getLevelString(Operator_Level access);
+const char *getLevelString(Operator_Level access);
 
-char *getPrizeString(Sint16 prize);
+const char *getPrizeString(Sint16 prize);
 
 // Score
 
@@ -91,7 +91,7 @@ struct Player
 	void move(Sint32 x, Sint32 y);
 	void move(Sint32 time);
 
-	Player(Uint16 iident, char *nname, char *ssquad, Uint32 fflagPoints, Uint32 kkillPoints, Uint16 tteam, Uint16 wwins, Uint16 llosses, BYTE sship, bool aacceptsAudio, Uint16 fflagCount);
+	Player(Uint16 iident, const char *nname, const char *ssquad, Uint32 fflagPoints, Uint32 kkillPoints, Uint16 tteam, Uint16 wwins, Uint16 llosses, BYTE sship, bool aacceptsAudio, Uint16 fflagCount);
 };
 
 // Brick

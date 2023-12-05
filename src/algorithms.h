@@ -32,7 +32,7 @@ void toupper(char *buffer);		// Use toupper on a whole string
 bool isPrintable(char c);		// Determine if you can see this character
 bool isAlphaNumeric(char c);	// Determine if this character is alpha-numeric
 
-bool isNumeric(char *buffer);	// Determine if this string is entirely numerical
+bool isNumeric(const char *buffer);	// Determine if this string is entirely numerical
 
 
 // This f(n) is weird.  Ex:
@@ -47,7 +47,7 @@ void trimString(char d, String &s);	// Remove all instances of (char) d
 
 String getString(Uint32 number, Uint32 base, Uint16 leading, bool sign);	// Convert binary numbers to ASCIIZ number representations
 
-int getInteger(char *number, int base);										// Convert ASCIIZ numbers to binary number representations
+int getInteger(const char *number, int base);										// Convert ASCIIZ numbers to binary number representations
 
 
 Uint32 trim(Uint32 large, Uint32 little);	// Useful for clipping calcs

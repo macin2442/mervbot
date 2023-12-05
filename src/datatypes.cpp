@@ -7,29 +7,29 @@
 
 //////// Fielding ////////
 
-Uint32 getLong(BYTE *Message, const Uint32 Offset)
+Uint32 getLong(const BYTE *Message, const Uint32 Offset)
 {
-	return *(Uint32*)&(Message[Offset]);
+	return *(const Uint32*)&(Message[Offset]);
 }
 
-Uint16 getShort(BYTE *Message, const Uint32 Offset)
+Uint16 getShort(const BYTE *Message, const Uint32 Offset)
 {
-	return *(Uint16*)&(Message[Offset]);
+	return *(const Uint16*)&(Message[Offset]);
 }
 
-Uint32 getLong(char *Message, const Uint32 Offset)
+Uint32 getLong(const char *Message, const Uint32 Offset)
 {
-	return *(Uint32*)&(Message[Offset]);
+	return *(const Uint32*)&(Message[Offset]);
 }
 
-Uint16 getShort(char *Message, const Uint32 Offset)
+Uint16 getShort(const char *Message, const Uint32 Offset)
 {
-	return *(Uint16*)&(Message[Offset]);
+	return *(const Uint16*)&(Message[Offset]);
 }
 
-BYTE getByte(char *Message, const Uint32 Offset)
+BYTE getByte(const char *Message, const Uint32 Offset)
 {
-	return *(BYTE*)&(Message[Offset]);
+	return *(const BYTE*)&(Message[Offset]);
 }
 
 
@@ -353,9 +353,9 @@ String String::ltrim()
 
 String String::rtrim()
 {
-	for (Uint32 i = len - 1; i >= 0; --i)
-		if (msg[i] != ' ')
-			return left(i + 1);
+	for (Uint32 i = 0; i < len; ++i)
+		if (msg[(len - 1) - i] != ' ')
+			return left((len - 1) - i + 1);
 
 	return String();
 }
@@ -366,7 +366,7 @@ String String::trim()
 	return s.rtrim();
 }
 
-char *spaces = "                                                                                                              ";
+const char *spaces = "                                                                                                              ";
 
 String String::lfill(Uint32 nlen)
 {

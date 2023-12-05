@@ -2,17 +2,17 @@ cmake_minimum_required(VERSION 3.16)
 
 project(MERVBot)
 
+# generate compile_commands.json
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_subdirectory(dep/zlib)
 
-#find_package(Boost COMPONENTS program_options REQUIRED)
-#if(NOT Boost_FOUND)
-#	message(error ": Boost library not found.")
-#endif()
-#include_directories(${Boost_INCLUDE_DIR})
-#link_directories(${Boost_LIBRARY_DIRS})
-#link_libraries(${Boost_LIBRARIES})
+configure_file(MERVBot.INI MERVBot.INI COPYONLY)
+configure_file(cfg/Commands.txt Commands.txt COPYONLY)
+configure_file(cfg/Operators.txt Operators.txt COPYONLY)
+configure_file(cfg/Spawns.txt Spawns.txt COPYONLY)
 
-add_executable(MERVBot
+add_executable(${PROJECT_NAME}
 	src/algorithms.cpp
 	src/botdb.cpp
 	src/botdll.cpp
@@ -38,16 +38,39 @@ add_executable(MERVBot
 )
 
 if (UNIX)
-	target_sources(MERVBot PRIVATE src/windows_compat.cpp src/winsock_compat.cpp)
-	target_compile_definitions(MERVBot PRIVATE __stdcall=)
+	find_package(Boost COMPONENTS filesystem program_options REQUIRED)
+	if(NOT Boost_FOUND)
+		message(error ": Boost library not found.")
+	endif()
+
+	target_sources(${PROJECT_NAME} PRIVATE src/windows_compat.cpp src/winsock_compat.cpp)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE __stdcall=)
+	target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+	target_include_directories(${PROJECT_NAME} PRIVATE ${Boost_INCLUDE_DIR})
+	target_link_directories(${PROJECT_NAME} PRIVATE ${Boost_LIBRARY_DIRS})
+	target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+	target_link_libraries(${PROJECT_NAME} dl)
 endif()
 
-target_include_directories(MERVBot PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(MERVBot SYSTEM PRIVATE dep/zlib $<TARGET_FILE_DIR:zlib>)
-target_link_libraries(MERVBot zlib)
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE dep/zlib $<TARGET_FILE_DIR:zlib>)
+target_link_libraries(${PROJECT_NAME} zlib)
 
-#find_package(ZLIB REQUIRED)
-##link_directories(zlib)
-#target_include_directories(MERVBot SYSTEM PUBLIC ${ZLIB_INCLUDE_DIRS})
-#target_link_libraries(MERVBot ${ZLIB_LIBRARIES})
-#target_link_libraries(MERVBot zlib)
+if (UNIX)
+	add_executable(test
+		src/windows_compat.cpp
+		src/test.cpp
+		src/datatypes.cpp
+		src/algorithms.cpp
+	)
+
+	target_compile_definitions(test PRIVATE __stdcall=)
+	target_compile_features(test PRIVATE cxx_std_17)
+
+	target_include_directories(test PRIVATE ${Boost_INCLUDE_DIR})
+	target_link_directories(test PRIVATE ${Boost_LIBRARY_DIRS})
+	target_link_libraries(test ${Boost_LIBRARIES})
+
+	target_link_libraries(test dl)
+endif()
