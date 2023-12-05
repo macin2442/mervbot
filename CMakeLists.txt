@@ -54,8 +54,13 @@ if (UNIX)
 endif()
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE dep/zlib $<TARGET_FILE_DIR:zlib>)
-target_link_libraries(${PROJECT_NAME} zlib)
+#target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE dep/zlib $<TARGET_FILE_DIR:zlib> $<TARGET_FILE_DIR:zlib>/..)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE dep/zlib $<TARGET_PROPERTY:zlibstatic,INCLUDE_DIRECTORIES>)
+
+#file(GENERATE OUTPUT zlib_paths.txt CONTENT $<PATH:REMOVE_FILENAME,$<TARGET_PROPERTY:zlib,SOURCES>>)
+#file(GENERATE OUTPUT zlib_paths.txt CONTENT $<TARGET_PROPERTY:zlib,INCLUDE_DIRECTORIES>)
+
+target_link_libraries(${PROJECT_NAME} zlibstatic)
 
 if (UNIX)
 	add_executable(test
