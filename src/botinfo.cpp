@@ -141,7 +141,7 @@ void BOT_INFO::resetSystemInfo()
 #if __linux__
 	machineID = 0;
 #else
-	GetVolumeInformation("C:\\", NULL, 0, &machineID, NULL, NULL, NULL, 0);
+	GetVolumeInformation("C:\\", NULL, 0, (LPDWORD)&machineID, NULL, NULL, NULL, 0);
 #endif
 
 	if (!machineID || machineID == 1 || machineID == -1)
