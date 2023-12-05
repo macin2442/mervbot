@@ -4,7 +4,8 @@ This is catids MERVBot source.
 
 ```
 # install dependencies
-sudo apt install libboost-program-options1.71-dev libboost-filesystem1.71-dev libboost-iostreams1.71-dev
+sudo apt install cmake build-essential
+sudo apt install libboost-program-options-dev libboost-filesystem-dev libboost-iostreams-dev
 
 # checkout submodules
 git submodule update --init --recursive

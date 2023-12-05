@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(MERVBot)
+project(mervbot)
 
 # generate compile_commands.json
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_subdirectory(dep/zlib)
+add_subdirectory(dep/zlib EXCLUDE_FROM_ALL)
 
 add_executable(${PROJECT_NAME}
 	src/algorithms.cpp
@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME} zlibstatic)
 
 add_custom_target(
 	${PROJECT_NAME}-config ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/MERVBot.INI ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Commands.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Operators.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Spawns.txt $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/cfg/MERVBot.INI ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Commands.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Operators.txt ${CMAKE_CURRENT_SOURCE_DIR}/cfg/Spawns.txt $<TARGET_FILE_DIR:${PROJECT_NAME}>
     COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>/lvl $<TARGET_FILE_DIR:${PROJECT_NAME}>/get
     COMMENT "Copying configuration files to ${PROJECT_NAME} output directory..."
 )
