@@ -13,7 +13,7 @@ struct BOT_INFO
 {
 	char params[512];
 
-	void setParams(char *pParams);
+	void setParams(const char *pParams);
 
 	// Login
 	char name[64];
