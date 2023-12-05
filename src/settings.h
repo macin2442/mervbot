@@ -11,10 +11,18 @@
 
 // Constant settings
 
-#ifdef _DEBUG
-#define VERSION_STRING		"MERVBot Debug Mode (Build 46) (DLL 6.7) by cat02e@fsu.edu"
+#ifdef DOTNET
+	#ifdef _DEBUG
+		#define VERSION_STRING		"MERVBot.Net Debug Mode (Build 48b) (DLL 6.9) by cat02e@fsu.edu. SOS was here!"
+	#else
+		#define VERSION_STRING		"MERVBot.Net Release Mode (Build 48b) (DLL 6.9) by cat02e@fsu.edu. SOS was here!"
+	#endif
 #else
-#define VERSION_STRING		"MERVBot Release Mode (Build 46) (DLL 6.7) by cat02e@fsu.edu"
+	#ifdef _DEBUG
+		#define VERSION_STRING		"MERVBot Debug Mode (Build 48b) (DLL 6.9) by cat02e@fsu.edu. SOS was here!"
+	#else
+		#define VERSION_STRING		"MERVBot Release Mode (Build 48b) (DLL 6.9) by cat02e@fsu.edu. SOS was here!"
+	#endif
 #endif
 
 #define INI_NAME			"MERVBot.INI"

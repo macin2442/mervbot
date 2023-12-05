@@ -9,6 +9,133 @@
 typedef void (__stdcall *pfnEnsureInit)(void);
 typedef void (__stdcall *pfnForceTerm)(void);
 
+#ifdef DOTNET
+inline char* StringToChar(System::String *string)
+{
+	__wchar_t *buffer = new __wchar_t[string->Length + 1];
+	memset(buffer, 0, string->Length + 1);
+
+	for (int i = 0; i < string->Length; i++)
+		buffer[i] = string->get_Chars(i);
+
+	char *buffer2 = new char[string->Length + 1];
+	memset(buffer2, 0, string->Length + 1);
+
+	WideCharToMultiByte(CP_ACP, 0, buffer, string->Length, buffer2, string->Length + 1, NULL, NULL);
+
+	delete[] buffer;
+
+	return buffer2;
+}
+
+bool DLLImports::importDotNet(char *file)
+{
+	System::AppDomain *domain;
+
+	int slot;
+	
+	// Find open import slot
+	for (slot = 0; slot < DLL_MAX_LOADED; ++slot)
+		if (!DLL_TALK[slot] && !DotNetPlugins[slot])
+			break;
+
+//	System::Byte buffer[];
+//
+//	try
+//	{
+//		System::String *name_1 = new System::String(file);
+//		System::String *name_2 = new System::String(".dll");
+//		System::String *name = System::String::Concat(name_1, name_2);
+//
+//		// First, load the file.
+//		System::IO::FileStream *fs = System::IO::File::Open(name, System::IO::FileMode::Open, System::IO::FileAccess::Read, System::IO::FileShare::Read);
+//		buffer = __gc new System::Byte[(int)fs->Length];
+//		fs->Read(buffer, 0, buffer->Length);
+//		fs->Close();
+//	}
+//	catch (System::Exception *ex)
+//	{
+//		h->logEvent("%s load failed - file not found.", file);
+//#ifdef _DEBUG
+//		System::Console::WriteLine(ex->ToString());
+//#endif
+//		return false;
+//	}
+
+	DotNetPlugin *p = new DotNetPlugin();
+	domain = System::AppDomain::CreateDomain(".Net plugin domain");
+	p->Domain = domain;
+
+	/*System::Reflection::Assembly *assembly;
+
+	try
+	{
+		assembly = p->Domain->Load(buffer);
+	}
+	catch (System::Exception *ex)
+	{
+		h->logEvent("%s is not a .Net plugin.", file);
+#ifdef _DEBUG
+		System::Console::WriteLine(ex->ToString());
+#endif
+		System::AppDomain::Unload(p->Domain);
+		return false;
+	}
+
+	*/try
+	{
+		System::String *name_1 = new System::String(file);
+		System::String *name_2 = new System::String(".dll");
+		System::String *name = System::String::Concat(name_1, name_2);
+
+		//plugin = dynamic_cast<MervInterfaces::IPlugin*>(p->Domain->CreateInstanceAndUnwrap(assembly->GetName()->Name, "PluginLoader"));
+		p->Plugin = dynamic_cast<MervInterfaces::IPlugin*>(domain->CreateInstanceFromAndUnwrap(name, "PluginLoader"));
+	}
+	catch (System::Exception *ex)
+	{
+		h->logEvent("%s is not a valid .Net plugin (could not load loader)", file);
+#ifdef _DEBUG
+		System::Console::WriteLine(ex->ToString());
+#endif
+		System::AppDomain::Unload(p->Domain);
+		return false;
+	}
+
+	DotNetPlugins[slot] = p;
+
+	strncpy(ModuleName[slot], file, DLL_NAMELEN);
+
+	talk(slot, makeInit(&listen, &(h->playerlist), &(h->flagList), (CALL_MAP)(h->map), &(h->brickList), (CALL_PARAMS)h->creation_parameters, (void*)&h->settings));
+	if (h->inArena)
+	{
+		talk(slot, makeArenaEnter(h->botInfo.initialArena, h->Me, h->billerOnline));
+		talk(makeArenaSettings(&h->settings));
+
+		if (h->gotMap)
+			talk(makeMapLoaded());
+	}
+
+	return true;
+}
+
+void DLLImports::clearDotNet(int slot)
+{
+	if (slot < 0 || slot >= DLL_MAX_LOADED)
+		return;
+
+	if (DLL_TALK[slot])
+		return;
+
+	if (!DotNetPlugins[slot])
+		return;
+
+	talk(slot, makeTerm());
+
+	System::AppDomain::Unload(DotNetPlugins[slot]->Domain);
+	DotNetPlugins[slot] = NULL;
+}
+#endif
+
 void DLLImports::clearImport(int slot)
 {
 	if (slot < 0 || slot >= DLL_MAX_LOADED)
@@ -31,6 +158,10 @@ void DLLImports::clearImport(int slot)
 		DLLhMod[slot] = NULL;
 		DLL_TALK[slot] = NULL;
 	}
+#ifdef DOTNET
+	else if (DotNetPlugins[slot])
+		clearDotNet(slot);
+#endif
 }
 
 void DLLImports::clearImports()
@@ -181,8 +312,6 @@ try {
 	case EVENT_ChangeArena:
 		{
 			String name = (char*)event.p[0];
-
-			h->botInfo.setArena(name.msg, h->botInfo.initialShip, h->botInfo.xres, h->botInfo.yres, h->botInfo.allowAudio);
 
 			if (!invalidArena(name.msg))
 				h->changeArena(name.msg);
@@ -337,14 +466,21 @@ bool DLLImports::importLibrary(char *files)
 
 	String plugin = s.split(',');
 
-	if (plugin != s)
+	if (s.len != 0)
 		importLibrary(s.msg);
+
+	if (plugin.len == 0)
+		return false;
 
 	int slot;
 
 	// Find open import slot
 	for (slot = 0; slot < DLL_MAX_LOADED; ++slot)
+#ifdef DOTNET
+		if (!DLL_TALK[slot] && !DotNetPlugins[slot])
+#else
 		if (!DLL_TALK[slot])
+#endif
 			break;
 
 	if (slot == DLL_MAX_LOADED)
@@ -358,6 +494,12 @@ bool DLLImports::importLibrary(char *files)
 try {
 #endif
 
+#ifdef DOTNET
+	// First try to load it as .Net.
+	if (importDotNet(plugin.msg))
+		return true;
+#endif
+
 	DLLhMod[slot] = LoadLibrary(plugin.msg);
 
 #ifndef _DEBUG
@@ -365,7 +507,8 @@ try {
 { h->logEvent("ERROR: Exception in DLLMain while loading plugin %s at slot %i", plugin.msg, slot); }
 #endif
 
-	if (!DLLhMod[slot]) return false;
+	if (!DLLhMod[slot])
+		return false;
 
 	// ** Mixed-mode plugin initialization **
 	// NOTE: This function is not strictly required for mixed-mode DLLs but it is the approach that Microsoft recommends.
@@ -379,11 +522,20 @@ try {
 
 	DLL_TALK[slot] = (CALL_TALK)GetProcAddress(DLLhMod[slot], (LPCSTR)1);
 
-	talk(slot, makeInit(&listen, &(h->playerlist), &(h->flagList), (CALL_MAP)(h->map), &(h->brickList), (CALL_PARAMS)h->creation_parameters));
+	if (!DLL_TALK[slot])
+	{
+		h->logEvent("Could not find entry point in plugin.");
+		return false;
+	}
+
+	talk(slot, makeInit(&listen, &(h->playerlist), &(h->flagList), (CALL_MAP)(h->map), &(h->brickList), (CALL_PARAMS)h->creation_parameters, (void*)&h->settings));
 	if (h->inArena)
 	{
 		talk(slot, makeArenaEnter(h->botInfo.initialArena, h->Me, h->billerOnline));
 		talk(makeArenaSettings(&h->settings));
+
+		if (h->gotMap)
+			talk(makeMapLoaded());
 	}
 
 	return true;
@@ -402,10 +554,10 @@ void DLLImports::talk(int slot, BotEvent event)
 	if (slot < 0 || slot >= DLL_MAX_LOADED)
 		return;
 
+	event.handle = h;
+
 	if (DLL_TALK[slot])
 	{
-		event.handle = h;
-
 #ifndef _DEBUG
 try {
 #endif
@@ -418,13 +570,47 @@ try {
 #endif
 
 	}
+#ifdef DOTNET
+	else if (DotNetPlugins[slot])
+	{
+//#ifndef _DEBUG
+try {
+//#endif
+
+		DotNetPlugin *p = DotNetPlugins[slot];
+
+		//p->Call(&event, Listener);
+		p->Plugin->Talk(static_cast<System::IntPtr>(&event), Listener);
+
+		//System::Object *params[] = __gc new System::Object*[3];
+		//params[0] = __box(static_cast<System::IntPtr>(&event));
+		//params[1] = Listener;
+		//params[2] = ListenerMethod;
+		
+		//p->Talk->Invoke(p->Loader, params);
+
+//#ifndef _DEBUG
+} catch (System::Exception* ex)
+{
+	char *text = StringToChar(ex->Message);
+	h->logEvent("ERROR: .Net exception in plugin %s at slot %i during event %i! Error: %s", ModuleName[slot], slot, event.code, text);
+
+	delete[] text;
+}
+//#endif
+	}
+#endif
 }
 
 char *DLLImports::getPlugin(int slot)
 {
 	if (slot < 0 || slot >= DLL_MAX_LOADED)
 		return NULL;
-	if (!DLL_TALK[slot]) return NULL;
+	if (!DLL_TALK[slot]
+#ifdef DOTNET
+	&& !DotNetPlugins[slot]
+#endif
+	) return NULL;
 
 	return ModuleName[slot];
 }
@@ -435,7 +621,14 @@ DLLImports::DLLImports(Host &host)
 	{
 		DLL_TALK[slot] = NULL;
 		DLLhMod[slot] = NULL;
+#ifdef DOTNET
+		DotNetPlugins[slot] = NULL;
+#endif
 	}
+
+#ifdef DOTNET
+	Listener = new DotNetListener();
+#endif
 
 	h = &host;
 }

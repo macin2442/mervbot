@@ -121,15 +121,21 @@ void toupper(char *buffer)
 
 void trimString(char d, String &s)
 {
-	char *msg = s.msg, ch;
-	Uint32 len = 0, off = 0;
+	Uint32 slen = s.len;
 
-	while (ch = msg[off])
-		if (ch == d) ++off;
-		else { msg[0] = msg[off]; ++len; ++msg; }
-
-	msg[0] = 0;
-	s.len = len;
+	for (Uint32 i = 0; i < slen; ++i)
+	{
+		if (s.msg[i] == d)
+		{
+			String tstr;
+			tstr.append(s.msg, i);
+			if ((i + 1) != slen)
+			{
+				tstr.append(s.msg, slen - i);
+			}
+			--slen;
+		}
+	}
 }
 
 bool split(char d, char *in, char *out, Uint32 lx, Uint32 ly)

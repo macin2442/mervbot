@@ -5,6 +5,7 @@
 #include "sockets.h"
 #include "settings.h"
 #include "botdb.h"
+#include "host.h"
 
 
 //////// Commands ////////
@@ -49,7 +50,6 @@ void gotHelp(Host *h, Player *p, Command *c)
 			{
 				h->sendPrivate(p, "lvl 2: !setlogin !where !zone !say !chat !listchat !clearchat !attach !follow !team !spec !ship !turret !awarp");
 			}
-			break;
 		case OP_Limited:
 		case OP_Player:
 			{
@@ -762,33 +762,6 @@ try {												// Catch all command-crash bugs
 				}
 			}
 		}
-		else if (c.check("test2"))
-		{
-			objectInfo oi;
-
-			oi.id = 5656;
-			oi.disabled = 0;
-
-			h->postRR(generateObjectToggle(-1, &oi, 1));
-		}
-		else if (c.check("test_obj"))
-		{
-			Player *pp = h->findPlayer(c.final);
-			if (!pp) break;
-
-			lvzObject obj[8];
-			memset(obj, 0, sizeof(obj));
-
-			for (int ii = 0; ii < 8; ++ii)
-			{
-				obj[ii].id = 101 + ii;
-				obj[ii].mapobj = 1;
-				obj[ii].change_image = 1;
-				obj[ii].image = 1;
-			}
-
-			h->postRR(generateObjectModify(-1, obj, 8));
-		}
 
 	case OP_SysOp:	/* FALL THRU */
 		if (c.check("spawn"))
@@ -1418,10 +1391,6 @@ try {												// Catch all command-crash bugs
 			case 1:		h->sendPrivate(p, "Mode set: 1, when in-game and not following I will act like a team-controlled turret");	break;
 			default:	h->sendPrivate(p, "Unknown mode set.  This be a problem you should talk to Catid about");					break;
 			};
-		}
-		else if (c.check("drop"))	// unlisted, drops carried flags
-		{
-			h->postRR(generateFlagDrop());
 		}
 		else if (c.check("where"))
 		{
@@ -2316,14 +2285,12 @@ try {												// Catch all command-crash bugs
 			h->botInfo.setArena(c.final, h->botInfo.initialShip, h->botInfo.xres, h->botInfo.yres, h->botInfo.allowAudio);
 
 			h->changeArena(c.final);
-			break;
 		}
 
 	case OP_Moderator:	/* FALL THRU */
 		if (c.check("help"))
 		{
 			gotRemoteHelp(h, p, &c, l);
-			break;
 		}
 		else if (c.check("listop"))
 		{
@@ -2369,7 +2336,6 @@ try {												// Catch all command-crash bugs
 				h->sendRemotePrivate(p, l.msg);
 			else
 				h->sendRemotePrivate(p, "No operators");
-			break;
 		}
 		else if (c.check("chat"))
 		{
@@ -2394,22 +2360,15 @@ try {												// Catch all command-crash bugs
 			{
 				h->sendRemotePrivate(p, "You must provide channel name(s): !chat squad_chat,newbie_chat,zone_chat");
 			}
-			break;
 		}
 		else if (c.check("version"))
 		{
 			h->sendRemotePrivate(p, VERSION_STRING);
-			break;
 		}
 
 	case OP_Limited:	/* FALL THRU */
 	case OP_Player:
-		if (c.check("help"))
-		{
-			gotRemoteHelp(h, p, &c, l);
-			break;
-		}
-		else if (c.check("lag"))	// unlisted, display session latency
+		if (c.check("lag"))	// unlisted, display session latency
 		{
 			String s;
 			s += "PING Current:";
@@ -2425,7 +2384,6 @@ try {												// Catch all command-crash bugs
 			s += " ms";
 
 			h->sendRemotePrivate(p, s.msg);
-			break;
 		}
 		else if (c.check("disabled"))
 		{

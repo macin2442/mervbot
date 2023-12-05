@@ -458,7 +458,7 @@ enum Chat_SoundBytes
 #pragma pack(pop)	// End of bitfields
 
 
-#include "host.h"
+
 
 
 // Continuum object toggling
@@ -505,24 +505,25 @@ enum _ObjectModes
 
 typedef struct	/* 11 by */
 {
-	BYTE  change_xy    :  1;  // what properties to change for this object
-	BYTE  change_image :  1;
-	BYTE  change_layer :  1;
-	BYTE  change_time  :  1;
-	BYTE  change_mode  :  1;
-	BYTE  reserved     :  3;
+	Uint8  change_xy    :  1;  // what properties to change for this object
+	Uint8  change_image :  1;
+	Uint8  change_layer :  1;
+	Uint8  change_time  :  1;
+	Uint8  change_mode  :  1;
+	Uint8  reserved     :  3;
 
-	WORD  mapobj       :  1;
-	WORD  id           : 15;
-	WORD  x, y;  // for screen objects, upper 12 bits are value, lower 4 are relative to what corner
-	BYTE  image;
-	BYTE  layer;
-	WORD  time         : 12;  // 1/10th seconds
-	WORD  mode         :  4;  // 0=AlwaysOn 5=ServerControlled
+	Uint16  mapobj       :  1;
+	Uint16  id           : 15;
+	Uint16  x, y;  // for screen objects, upper 12 bits are value, lower 4 are relative to what corner
+	Uint8  image;
+	Uint8  layer;
+	Uint16  time         : 12;  // 1/10th seconds
+	Uint16  mode         :  4;  // 0=AlwaysOn 5=ServerControlled
 } lvzObject;
 
 #pragma pack(pop)	// End of bitfields
 
+#include "host.h"
 
 // s2c Message handler prototypes
 

@@ -1819,6 +1819,8 @@ void Host::doEvents()
 
 	// dll
 
+		imports->talk(makeHighFreqTick());
+
 		if (time - lastTick >= 100)
 		{
 			lastTick = time;
@@ -2283,9 +2285,6 @@ String getTimeString()
 
 void Host::logEvent(char *format, ...)
 {
-	if (botInfo.db->noTerminal)
-		return;
-
 	// Smart way to do terminal printing: Pretty timestamp, log file, no bleep bug
 	bool seen = false;
     va_list vl;
@@ -2415,6 +2414,9 @@ void Host::logEvent(char *format, ...)
 	else
 		loggedChatter[logLength++] = new String(s);
 #endif
+
+	if (botInfo.db->noTerminal)
+		return;
 
 	printf("%s  %s\n", botInfo.name, s.msg);
 }

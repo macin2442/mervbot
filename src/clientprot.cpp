@@ -25,6 +25,20 @@ void __stdcall handleUnknown(hostMessage *m)
 
 	h->logEvent("Unknown message type %i(%i)", msg[0], len);
 	h->logIncoming(msg, len);
+
+#ifdef DOTNET
+	// Just an extra log here, straight for unknowns -SOS
+
+	System::IO::FileStream *s = System::IO::File::Open("unknown_packet.log", System::IO::FileMode::OpenOrCreate, System::IO::FileAccess::Write, System::IO::FileShare::None);
+	
+	System::Byte buffer[] = __gc new System::Byte[len];
+	for (unsigned int i = 0; i < len; i++)
+		buffer[i] = (unsigned char)msg[i];
+
+	s->Position = s->Length;
+	s->Write(buffer, 0, len);
+	s->Close();
+#endif
 }
 
 void __stdcall handleKeepAlive(hostMessage *m)
@@ -1475,14 +1489,15 @@ void __stdcall handleWeaponUpdate(hostMessage *m)
 		p->portal	= ii.portal;
 	}
 
-	// prediction
 	p->move(x, y, xvel, yvel);
-	p->move(transit_time);
-
-	h->imports->talk(makePlayerMove(p));
 
 	if (wi.type != PROJ_None)
-		h->imports->talk(makePlayerWeapon(p, wi.n));
+		h->imports->talk(makePlayerWeapon(p, wi.n, transit_time));
+
+	h->imports->talk(makePlayerMove(p, transit_time));
+
+	// prediction
+	p->move(transit_time);
 
 	if (h->follow)
 	if (p == h->follow->item)
@@ -1611,8 +1626,11 @@ void __stdcall handlePlayerDeath(hostMessage *m)
 
 			Ship_Types old = (Ship_Types)h->Me->ship;
 
-			h->postRR(generateChangeShip(ship));
-			h->postRR(generateChangeShip(old));
+			if (killee->flagCount != 0)
+			{
+				h->postRR(generateChangeShip(ship));
+				h->postRR(generateChangeShip(old));
+			}
 		}
 
 		killer->flagCount += flags;
@@ -1818,11 +1836,12 @@ void __stdcall handlePlayerPosition(hostMessage *m)
 		p->portal	= ii.portal;
 	}
 
-	// prediction
 	p->move(x, y, xvel, yvel);
-	p->move(transit_time);
 
-	h->imports->talk(makePlayerMove(p));
+	h->imports->talk(makePlayerMove(p, transit_time));
+
+	// prediction
+	p->move(transit_time);
 
 	if (h->follow)
 	if (p == h->follow->item)
@@ -2126,7 +2145,7 @@ void __stdcall handleChangePosition(hostMessage *m)
 	if (!h->Me) return;
 	h->Me->move(x << 4, y << 4);
 
-	h->imports->talk(makePlayerMove(h->Me));
+	h->imports->talk(makePlayerMove(h->Me, 0));
 
 //	h->logEvent("Personal ship coordinates changed");
 }
@@ -2136,14 +2155,21 @@ void __stdcall handleReceivedObject(hostMessage *m)
 
 	/*	Field	Length	Description
 		0		1		Type byte
-		1		?		?
+		1		11		lvzObject struct (repeated)
 	*/
 
-	if (len != 0)
+	if (len < 12 || (len - 1) % 11 != 0)
 	{
 		handleUnknown(m);
 
 		return;
+	}
+
+	for (unsigned int i = 0; i < (len - 1) / 11; i++)
+	{
+		lvzObject *o = (lvzObject*)(msg + 1 + i * 11);
+
+		h->imports->talk(makeObjectModified(o));
 	}
 }
 
@@ -2720,11 +2746,11 @@ void __stdcall handleObjectToggle(hostMessage *m)
 
 		if (obj.disabled)
 		{
-			h->logEvent("Object number %i disabled", obj.id);
+			//h->logEvent("Object number %i disabled", obj.id);
 		}
 		else
 		{
-			h->logEvent("Object number %i enabled", obj.id);
+			//h->logEvent("Object number %i enabled", obj.id);
 		}
 
 		index += 2;

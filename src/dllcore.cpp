@@ -3,7 +3,19 @@
 
 //////// Bot->DLL ////////
 
-BotEvent makeInit(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CALL_BLIST b, CALL_PARAMS params)
+
+BotEvent makeObjectModified(lvzObject *o)
+{
+	BotEvent event;
+
+	event.code = EVENT_ObjectModified;
+
+	event.p[0] = (void*)o;
+
+	return event;
+}
+
+BotEvent makeInit(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CALL_BLIST b, CALL_PARAMS params, void *settings)
 {
 	BotEvent event;
 
@@ -16,6 +28,7 @@ BotEvent makeInit(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CALL_B
 	event.p[4] = m;
 	event.p[5] = b;
 	event.p[6] = params;
+	event.p[7] = settings;
 
 	return event;
 }
@@ -25,6 +38,15 @@ BotEvent makeTick()
 	BotEvent event;
 
 	event.code = EVENT_Tick;
+
+	return event;
+}
+
+BotEvent makeHighFreqTick()
+{
+	BotEvent event;
+
+	event.code = EVENT_HighFreqTick;
 
 	return event;
 }
@@ -124,18 +146,19 @@ BotEvent makePlayerEntering(Player *p)
 	return event;
 }
 
-BotEvent makePlayerMove(Player *p)
+BotEvent makePlayerMove(Player *p, int transit_time)
 {
 	BotEvent event;
 
 	event.code = EVENT_PlayerMove;
 
 	event.p[0] = p;
+	event.p[1] = *(void**)&transit_time;
 
 	return event;
 }
 
-BotEvent makePlayerWeapon(Player *p, Uint16 wi)
+BotEvent makePlayerWeapon(Player *p, Uint16 wi, int transit_time)
 {
 	BotEvent event;
 
@@ -143,6 +166,7 @@ BotEvent makePlayerWeapon(Player *p, Uint16 wi)
 
 	event.p[0] = p;
 	event.p[1] = *(void**)&wi;
+	event.p[2] = *(void**)&transit_time;
 
 	return event;
 }

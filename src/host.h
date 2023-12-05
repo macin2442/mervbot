@@ -28,12 +28,12 @@
 // Core options
 
 #define PACKET_SILENCE_LIMIT     4000
-#define MAX_RELIABLE_IN_TRANSIT    15
+#define MAX_RELIABLE_IN_TRANSIT     5
 #define CHUNK_SIZE                496
 #define SLOW_ITERATION             50
 #define LOG_INTERVAL             1000
 #define SYNC_INTERVAL			 2000
-#define MAX_LOG_LINES              50
+#define MAX_LOG_LINES             100
 #define KEEP_LOG
 #define COSTLY_SPEEDUP
 #define CLUSTER_MODE

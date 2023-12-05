@@ -10,6 +10,12 @@
 // Minor version means extra features are available.
 
 /*
+	6.9
+		Bot2DLL	EVENT_HighFreqTick
+		Bot2DLL EVENT_PlayerWeapon + transit time
+		Bot2DLL EVENT_PlayerMove + transit time
+		Bot2DLL EVENT_Init + arena settings pointer
+		Bot2DLL EVENT_ObjectModified
 	6.8
 		Bot2DLL EVENT_MapLoaded
 		Bot2DLL EVENT_Init + creation string
@@ -68,7 +74,7 @@
 */
 
 #define CORE_MAJOR_VERSION 6
-#define CORE_MINOR_VERSION 8
+#define CORE_MINOR_VERSION 9
 
 #include "player.h"
 #include "commtypes.h"
@@ -86,6 +92,7 @@ enum Bot2DLL_EventCodes
 			[4] Map
 			[5] Bricklist
 			[6] Creation string (v6.8)
+			[7] Arena settings pointer (v6.9)
 		*/
 
 	EVENT_Term,
@@ -154,6 +161,7 @@ enum Bot2DLL_EventCodes
 		/*	Player changed position
 
 			[0] Player class
+			[1] Transit time
 		*/
 
 	EVENT_PlayerDeath,
@@ -328,6 +336,7 @@ enum Bot2DLL_EventCodes
 
 			[0] Player class
 			[1] weaponInfo struct
+			[2] transit time
 		*/
 
 	EVENT_PositionHook,
@@ -371,6 +380,15 @@ enum Bot2DLL_EventCodes
 //// 6.8 ////
 	EVENT_MapLoaded,
 		/*  Map was loaded
+		*/
+//// 6.9 ////
+	EVENT_HighFreqTick,
+		/*  Called very, very often.
+		*/
+	EVENT_ObjectModified,
+		/*  LVZ object was moved/modified
+
+			[0] lvzObject struct
 		*/
 };
 
@@ -539,10 +557,12 @@ struct BotEvent
 	BotEvent();
 };
 
+#include "clientprot.h"
+
 
 //////// Bot->DLL ////////
 
-BotEvent makeInit				(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CALL_BLIST b, CALL_PARAMS params);
+BotEvent makeInit				(CALL_COMMAND c, CALL_PLIST p, CALL_FLIST f, CALL_MAP m, CALL_BLIST b, CALL_PARAMS params, void *settings);
 
 BotEvent makeTick				();
 
@@ -557,8 +577,8 @@ BotEvent makePlayerEntering		(Player *p);
 BotEvent makeCreateTurret		(Player *turreter, Player *turretee);
 BotEvent makeDeleteTurret		(Player *turreter, Player *turretee);
 
-BotEvent makePlayerMove			(Player *p);
-BotEvent makePlayerWeapon		(Player *p, Uint16 wi);
+BotEvent makePlayerMove			(Player *p, int transit_time);
+BotEvent makePlayerWeapon		(Player *p, Uint16 wi, int transit_time);
 BotEvent makeWatchDamage		(Player *p, Player *k, Uint16 wi, Uint16 energy, Uint16 damage);
 BotEvent makePlayerDeath		(Player *p, Player *k, int bounty, int flags);
 BotEvent makePlayerPrize		(Player *p, int prize);
@@ -604,6 +624,10 @@ BotEvent makeObjectToggled		(Uint16 obj_n);
 BotEvent makeTerm				();
 
 BotEvent makeMapLoaded			();
+
+BotEvent makeHighFreqTick		();
+
+BotEvent makeObjectModified		(lvzObject *o);
 
 //////// DLL->Bot ////////
 
