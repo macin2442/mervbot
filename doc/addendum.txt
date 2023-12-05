@@ -1,0 +1,683 @@
+-=Why=-
+
+This file was written after the distribution of Lates.zip to better
+describe some of the errata in SubSpace programming.  Many of the
+programs we developed must be explained and I will do so here.
+
+
+-=Updates=-
+
+7/26/02 - Added some Continuum protocol
+
+10/18/01 - vastly updated to current SubSpace protocol
+
+2/22/01 - last logged update, very pathetic protocol outline
+
+
+-=Time=-
+
+All measures of time in SubSpace are conducted in hundredths of a second.
+In C++, you can #include <windows.h> and say "GetTickCount() / 10" to get this value.
+In VB, you can look up this API function in the API viewer and DECLARE it.
+
+
+-=Encryption=-
+
+SubSpace uses encryption.  Encryption means to obscure the true meaning of a message
+using a numerical pattern.
+
+When SubSpace connects to a SubGame game server, it firsts completes a key exchange.
+ie.
+
+00 01 KK KK KK KK VV VV
+00 05 SS SS RR RR
+00 06 SS SS RR RR TT TT TT TT
+00 02 ~K ~K ~K ~K
+'KK = Random number (must be negative)
+'VV = Encryption version (1 for SubSpace, 16 for Continuum)
+'SS = Number of connections since last recycle
+'RR = Random number
+'TT = Local time
+'~K = Session key (must be unary -KK)
+
+
+There is some protocol that goes along with these packets:
+
+00 01 gets resent until 00 02 is recv'd.
+If KK >= 0, then a proper SubSpace server will not acknowledge your connection.
+00 05/00 06 isn't used in older SubSpace servers, it's recommended you take this
+   into account while designing your own stack.
+Up until the 00 02 response, no other packet types (should be) accepted by the server.
+
+
+Why we use 00 05/00 06:
+
+A few years ago I discovered that sending a massive load of 00 01 packets to a SubGame
+would effectively create a Denial of Service condition; PriitK patched it by
+masterfully recoding the connection protocol for SubGame to ignore requests until it
+gets an 00 06 response to SG's 00 05.  It is therefore a fix for a nasty problem.
+
+
+Why we use packets limited to 520 bytes:
+
+For both bandwidth reasons and, interestingly enough, the hard fact that SubSpace's
+encryption uses a buffer of 520 bytes - anything longer cannot be decoded.
+
+
+There are some ways to disable encryption:
+
+Send a KK field of 0.  00 01 00 00 00 00 01 00
+The server must respond with a NULL key (no encryption).
+Custom SubSpace stacks may ignore this.
+
+Encryption may be disabled server-side if the key you send
+is the same as the key you get back.
+
+
+But if you want to use encryption:
+
+The lengthy DOC by Coconut emulator explains how he ripped SS encryption
+to a DLL file with SoftICE for use in VB programs.  MERVBot contains C++
+code which encapsulates all aspects of maintaining a SubSpace session,
+including encryption.
+
+
+Security of the encryption:
+
+This method of encryption is very weak to a chosen-plaintext attack, and
+tends to share every fourth byte of the keystream with other connections
+established within ~48 hours.
+
+For example, SECRET_KEY ^ PLAINTEXT -> CIPHER_TEXT, if you know PLAINTEXT
+then PLAINTEXT ^ CIPHER_TEXT = SECRET_KEY.  In short, do not trust any
+personal data on a logged connection to SubSpace.  Continuum, on the other
+hand, has military-grade encryption =))
+
+
+-=Core protocol=-
+
+There are two kinds of packets in SubSpace protocol.
+Core  and  Game
+
+Each plays a different role.
+
+Core packets start with 00, whereas Game packets do not.
+
+Core packets direct the "flow" of traffic you receive.  SubSpace uses UDP which is an
+unreliable way to send packets between computers.  SubSpace uses Core packets to make
+sure that some packets always make it, for one example of their application.
+
+Game packets can only be processed after key exchange, and cannot be sent reliably on
+their own.
+
+Game packets vary between SubGame, SubBill, Directory Server, Client, and other SubSpace
+stacks, whereas the Core protocol does not change.
+
+
+        :Key exchange
+
+00 01 - Connection request
+        00 01 <Key(4)> <Encryption type(2)>
+NOTE: Key must be negative, Encryption type = 1 for SubSpace
+
+
+00 02 - Connection affirmation
+        00 02 <Encryption key(4)>
+NOTE: Key will be unary -SentKey
+
+        :Continuum key exchange (subject to change, provided for completeness)
+
+
+00 10 - Server keys
+        00 10 <Key1(4)> <Key2(4)>
+
+
+00 11 - Client acknowledgement
+        00 11 <Key1(4)>
+
+        :Time synchronization
+
+
+00 05 - Sync. request
+        00 05 <Local time(4)> [<Total packets sent(4)> <Total packets recv'd(4)>]
+NOTE: As you notice, the packet counts are optional.
+
+
+00 06 - Sync. response
+        00 06 <Server time(4)> <Local time recv'd(4)>
+NOTE: This allows you to know what the time is at the server within ~(round-trip time) / 4 ms
+
+
+        :Transmission control
+
+00 07 - Disconnection
+        00 07
+
+
+00 03 - Reliable message
+        00 03 <ACK_ID(4)> <Message(...)>
+NOTE: There are some special things to consider when creating a SubSpace stack gifted with Reliable messaging.
+
+      For outgoing traffic:
+      1. All outgoing traffic must be put into a SendLog until an ACKnowledgement is received with the same
+         ACK_ID as the traffic.
+      2. Sometimes double-sending reliable messages is warranted, given high-bandwidth and high-packetloss.
+      3. ACK's should cause disconnection if you have not sent a message with that ACK_ID yet.
+      4. ACK_ID starts at 0 for both client and server, ACK_ID is incremented by one every time.
+
+      For incoming traffic:
+      1. ACK all incoming Reliable traffic no matter what.  ACK the traffic twice if it makes you feel happy.
+      2. All incoming traffic must be processed in the order of the ACK_ID's.
+      3. If a packet is lost, all traffic stamped with an ACK_ID higher than the next expected ACK_ID must be
+         placed on a BackLog of packets until the packet in sequence is finally received.
+      4. If an incoming reliable message's ACK_ID has already been processed, ignore the packet.
+
+00 04 - ACKnowledgement
+        00 04 <ACK_ID(4)>
+NOTE: ^^ See Reliable message for a complete description on how to treat these. ^^
+
+
+00 08 - Body of tiny chunked packet
+        00 08 <Message(...)>
+NOTE: Only one chunked packet may be sent at a time, and all chunked packets must be reliable.
+      Remember the packet size limit of 520?  This is where these come in, by chunking the packet
+      into tiny pieces (<520 bytes when sent), the larger packet may be reassembled on the other
+      side.  All file transfers (news file, SSUpdate.exe, *getfile, *putfile, etc) are done this
+      way, along with the Game packet header that the chunked packets assemble.
+      FYI, the maximum buffer size for a 00 08/00 09-transmitted packet is around 1 KB.
+
+00 09 - Tail of tiny chunked packet
+        00 09 <Message(...)>
+NOTE: Final chunk is sent via this packet.
+
+
+00 0a - Really big chunks
+        00 0a <Total packet length(4)> <Message(...)>
+NOTE: Works just like 00 08/00 09 except has only one packet type associated with the transfer.
+      Maximum size?  40 MB.  Files can be transfered either way, but this one gives the receiver
+      the ability to see a "progress bar" representing how much of the file remains.  Everywhere
+      where you see a progress bar in Continuum or SubSpace it's using Really Big Chunk packets!
+
+
+00 0e - Cluster packet
+        00 0e <Length(1)> <Message(Length)> [<Length(1)> <Message(Length)> [<Length(1)> <Message(Length)> [...]]]
+NOTE: This is a fun one, you get to stack packets on top of eachother, allowing very cool combinations.
+
+
+Can Core packets be combined?
+
+Sure!  In fact servers send combination messages ALL the time, so if you are planning on
+writing a bot, it's important to get familiar with them!  Here are some examples:
+
+SubSpace is tring to handle this packet: 00 03 __ __ __ __ 00 09 DE AD BE EF
+
+SubSpace sees that the first byte is 00, now knows that the packet is a Core packet.
+It sees 03, a Reliable header.  It sends an ACK (00 04 __ __ __ __) does some stuff to
+make sure the packet is in sequence, and moves on.
+
+SubSpace recursively calls the packet handler and looks at 00 09 DE AD BE EF
+
+SubSpace sees that the first byte is 00, now knows that the packet is a Core packet.
+It sees 00 09, a Tail of tiny chunked packet packet.  As this is the end of a chunked
+packet, it checks to see if any 00 08 Core packets have been received and appends the
+contents of the 00 09 Core packet to whatever had been received already.
+
+SubSpace recursively calls the packet handler and looks at DE AD BE EF
+
+This is where I will stop, because that's beyond the scope of this section :)
+
+
+-=Game protocol=-
+
+This would take a long time to explain.  Instead you should look at MERVBot source also found on my website.
+In 'clientprot.cpp' is a set of diagrams for both C2S and S2C packets (Client to Server, Server to Client).
+
+The best I can do is list the packet types and what they are for:
+
+c2s Packet types
+
+-- Original SubSpace protocol
+
+00 Start of a special header
+01 Arena login
+02 Leave arena
+03 Position packet
+04 
+05 Death message
+06 Chat message
+07 
+08 Spectate player
+09 Password packet
+0A 
+0B SSUpdate.EXE request
+0C map.lvl request
+0D news.txt request
+0E Voice message
+0F Frequency change
+10 Attach request
+11 
+12 
+13 Flag request
+14 
+15 Drop flags
+16 File transfer
+17 Registration information response
+18 Set ship type
+19 Set personal banner
+1A Security checksum
+1B Security violation
+1C Drop brick
+1D (server crash)
+1E Personal KoTH timer ended
+1F Fire a ball
+20 Ball request
+21 
+22 ? Task switch ? 22 <timestamp(4)> E4 C0 7C C2 48 C9 1C 28 75 <?(4)>
+
+-- Additional Continuum protocol
+
+23 
+24 Continuum password packet
+
+s2c Packet types
+
+-- Original SubSpace protocol
+
+01 PlayerID change
+02 You are now in the game
+03 Player entering
+04 Player leaving
+05 Player fired a weapon
+06 Player died
+07 Chat
+08 Player took a prize
+09 Player score changed
+0A Password packet response
+0B Soccer goal
+0C Player voice
+0D Set player frequency
+0E Create turret link
+0F Arena settings
+10 File transfer
+11 <NO-OP>
+12 Flag position
+13 Flag claim
+14 Flag victory
+15 Destroy turret link
+16 Drop flag
+17 <NO-OP>
+18 Synchronization
+19 Request file
+1A Reset score(s)
+1B Personal ship reset
+1C Put player in spectator mode / change extra info flag
+1D Player team and ship changed
+1E Banner flag
+1F Player banner changed
+20 Collected prize
+21 Brick dropped
+22 Turf flag update
+23 Flag reward granted
+24 Speed zone statistics
+25 Toggle UFO ship
+26 <NO-OP>
+27 Keep-alive
+28 Player position update
+29 Map information
+2A Compressed map file
+2B Set personal KoTH timer
+2C KoTH game reset
+2D ? Some other timer change ?
+2E Power-ball position update
+2F Arena directory listing
+30 Got zone banner advertisements
+
+-- Additional Continuum protocol
+
+31 You are now past the login sequence
+32 Change personal ship coordinates
+33 Custom login failure message
+34 Continuum version packet
+35 Object toggling
+
+
+-=Login Trace=-
+
+One of the most confusing parts of the SubSpace protocol is the complicated
+login procedure.  In this section I will provide an annotated login attempt
+between a client and SubGame v1.34.9.  All reliable headers have been stripped.
+
+
+<Insert key exchange here.  I've already discussed it>
+
+SubSpace Client sends his Password packet
+C2S > Field Length Description
+      0     1      Type byte: Packet #9
+      1     1      New user? 1 = true, 0 = false
+      2     32     Name
+      34    32     Password
+      66    4      MachineID (volume C: serial number)
+      70    1      Magic number: 0
+      71    2      Timezone bias (time zone)
+      73    2      Magic number: 0x6f9d
+      75    2      Client version (134)
+      77    4      Magic number: 444
+      81    4      Magic number: 555
+      85    4      PermissionID (random number in registry)
+      89    12     Zero'd out
+
+<Client sends Synchronization request>
+
+<Server sends Synchronization response>
+
+SubGame sends his Password Response packet
+S2C > Field Length Description
+      0     1      Type byte
+      1     1      Accept response meaning
+      2     4      Server version
+      6     4      ?
+      10    4      EXE checksum
+      14    4      ? unused
+      18    1      ? boolean
+      19    1      Boolean: Request registration form
+      20    4      ? checksum changes when subspace.exe changes
+      24    4      News checksum (0 = no news file)
+      28    4      ? time/date
+      32    4      ? time/date
+
+SubGame sends a go-ahead flag
+S2C > 31
+
+SubSpace Client sends an Arena Change request, typically to arena ''
+
+C2S > Field Length Description
+      0     1      Type byte
+      1     1      Ship type
+      2     2      Allow audio? 1 = true, 0 = false
+      4     2      X resolution
+      6     2      Y resolution
+      8     2      Main arena number
+      10    16     Arena name
+
+... At this point the client is logged in far enough that it can start playing.
+
+
+-=Billing Servers=-
+
+SubGame and SubBill go hand-in-hand to serve SubSpace games.  However, the
+billing server's function goes largely unnoticed.  Firstly, there is a way
+to communicate with SubBill through SQL (It may be something else, I just
+saw something familiar while browsing the disassembly) in order to read scores,
+shut down and recycle servers, etc.  Secondly, the server may rename users
+explaining how BanG renames cheaters to ^Banned and is reinforced by the fact
+that both MacId and IP are sent to the biller.  Yes, BanG only sees your IP
+and MacId and Name and TimeZoneBias.  I know TimeZoneBias because when PriitK
+tried to patch my SSUnban program he instead relied on invalid TimeZoneBias,
+and the "patch" was handled by BanG on the SSC biller.  SubBill servers send packets
+unencrypted, making them the most insecure part of SubSpace login.  All passwords
+get sent unencrypted to SubBill (Read: Sniff packets between SubGame and SubBill
+to steal passwords.  This is way too easy and must be fixed).  SSC has a SubBill
+that sends encrypted packets.  How do I know?  I tried to connect a server to their
+biller and noticed that the SubBill traffic was encrypted.  This is not how to
+protect user passwords though.  Instead, steps must be taken to insure that the
+SubGame server encrypts passwords using the SubBill method before forwarding them
+to SubBill.  This SubBill password encryption is included in SSBilling and the
+standalone form by Coconut emulator.
+
+SSC uses a system where each subnetwork has a proxy that directs subgame traffic
+to the central biller.  PriitK says this is to handle net-splits.
+Here's a SubSpace service scan of a few nodes with other services clipped:
+
+SSCC 207.90.221.66
+SSCBiller Proxy : 1000
+
+SSCI 194.177.103.28
+SSCBiller Proxy : 900
+
+SSCS 216.141.107.170
+SSCBiller Proxy : 600
+
+
+-=Lag=-
+
+Most people wonder what causes lag.  It's pretty simple.  When your average ping
+(the mean of a series of round trip packet times) is very different than your current
+ping (the last time between when a packet was sent and when a response was received),
+you are "laggy" because when the SubSpace client predicts the next location of someone..
+ie.
+-> = your ship's position
+Your PC        ->
+Server                    ->
+Remote client  ->                     ->
+               ^^                     ^^ Where your ship is on your screen.
+               ^^ What the remote client knows for sure, the rest must be predicted.
+
+...that number is affected by your average ping and not your current (true ping).
+In the diagram above, your ship should be where that last arrow is on other clients'
+screens.  However, the packet that was sent by you took a while to reach that other
+computer so the location remote machines see is different than your actual location.
+This is described by the equation:
+ActualXCoord = SentXCoord + (RateInXDirection * LagTime)
+
+Since it is impossible to know the time it took to send a packet (yes, it is impossible),
+all of the players on your screen are actually at their predicted position instead of
+actual.  Using the loopback IP, 127.0.0.1, ping times less than 1 ms are very likely,
+but even then the time it takes to send a packet is impossible to determine.
+
+
+-=Prizes or Greens=-
+
+I (Catid) once wrote a program called NetNibbles which allowed me to test my theories of
+how SubSpace works internally without actually picking it appart with SoftICE.  It used
+a spectacular method of placing prizes in the same location on all connected clients without
+having to send each one as an object, or part of the level file.  This method used what is
+called a pseudo-random number generator, in this case the RND() function, with a server-created
+seed.  Every now and then a new seed would be distributed to all clients and they would
+all erase the old prizes and place new ones with the seed sent.
+In VB, this is written thusly:
+Rnd -1 'Reset the generator, RND uses a timer of its own to ensure that even with the same seed,
+       ' the output looks random.
+Randomize SEED                'Reseed the generator with the server SEED variable.
+R = Rnd(...)
+
+Not surprisingly, SubSpace does the exact same thing, except it uses a random number generator
+that Coconut emulator was kind enough to rip for all of ya.
+
+
+-=MacId spoofing=-
+
+MachineID is the volume serial number of drive C:.  This is proved in MERVBot,
+which uses the MacId of the machine it is running on minus one.  However,
+this "MachineID" is easily hackable for three reasons.  1) You are able to see
+it in the game.  2) It is unencrypted in memory.  3) It is generated when you first
+load SubSpace and whenever you leave a zone.  Therefore, changing it was as easy
+as it was for Sage386 to hack the Permission ID on /*kill X Mod/SMod bans.  It took
+5 minutes to change my MacId in memory with WinHack 2 by reading it out of /*info
+as a SysOp and searching for it with WH2.  Thus, it would be simple to change the MacId
+to that of a zone SMod and ban them as well, just as some cheaters had done with the
+Permission ID!  TimeZoneBias = your time zone ID - 30, as shown in MERVBot, this was also
+stored unencrypted in memory.  Now, the problem cannot be ignored and hopefully TGS
+or PriitK will fix it.
+
+The memory offsets for these ID tags are shown in Unban.  Note that there is a lot of code
+commented out.  If you can get it to work again, that is the code that turns your SS client
+into a flying bot, which zeroes in on the second player on your player list.
+
+As a side note, Infantry's Ban IDs are encrypted in memory or generated on demand.
+Infantry is JeffP's new game.  I know this because one can apply the same methods used to
+hack SubSpace's protocol in Infantry.
+Here's a packet log from Infantry to prove it:
+
+SEND-> 0000   00 01 02 00 BD 03 8E 02                            ........
+
+RECV-> 0000   00 02 BD 03 8E 02 00 00 00 00                      ..........
+
+SEND-> 0000   00 03 00 00 00 00 00 01 00 43 61 74 69 64 00 00    .........Catid..
+SEND-> 0010   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0020   00 00 00 00 00 00 00 00 00 PW PW PW PW PW PW PW    ................
+SEND-> 0030   PW 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0040   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0050   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0060   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0070   00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00    ................
+SEND-> 0080   00 00 00 00 00 00 00 00 00 E5 15 73 29 4D 2D F6    ...........s)M-.
+SEND-> 0090   58 00 00 00 00 4C 00 00 20 78 18 51 65 00 00 00    X....L.. x.Qe...
+SEND-> 00A0   00 00 00 00 00 00 00                               .......
+
+RECV-> 0000   00 0B 00 00 00 00 00                               .......
+
+All the unencrypted BanIDs in the password packet are nowhere to be found in memory.
+Notice how similar the protocol is?  Only minor differences in the login packet and
+encryption.  I suppose everyone was right when they said SubSpace was merely a tech test.
+
+
+-=SubSpace memory PlayerList=-
+
+SubSpace stores the player list in a constant location in memory, in the order it
+appears in the game (can be sorted, your name is not always on the top).  It is at
+offset 4702840 as provided by Twister.  Each 4 bytes after that address contains a
+pointer(location in memory, an offset) where you can find the player data including
+name, shiptype, frequency and all that other good stuff.  In SubSpace login packets,
+your name may be changed.  In fact, you are part of the playerlist sent by the server.
+This is managed by a separate packet which designates which player you are on the list.
+The number is an integer somewhere in memory.  Sage386 did not know this when he wrote
+Twister, instead he compared the first item on the playerlist to the first item at a
+different offset: 4900712
+ie.
+  if (not ReadProcessMemory(ProcessInfo.hProcess, ptr($47C278), @addr1, 4, bloaded)) or
+     (not ReadProcessMemory(ProcessInfo.hProcess, ptr($4AC768), @addr2, 4, bloaded)) or
+     (addr1 <> addr2) then abort;
+
+Since when SubSpace.exe removes a player from the PlayerList, data at the end is not NULL
+terminated, it is assumed that SubSpace.exe keeps a player count.  MERVBot works the opposite
+way by keeping a static list of player information, indexed by the player Id sent by the server.
+ie.
+  For I = 1 to TotalPlayers
+    'SubSpace's method
+  Next
+
+  For I = 0 to MAX_PLAYERS
+    If Plist(i).SSName <> "" Then
+      'My method
+    EndIf
+  Next
+
+A bot MUST know the offset at which this count is stored to keep an accurate list of players in
+the game.  I moved on to packet bots before discovering the address, and for brevity I'm not going
+to look for it now.  Take a look at ShipBot for a good example of this kind of bot.  Note that
+instead of searching for the "Ticked name:" window handle (HWnd), the bot reads the HWnd from
+SubSpace memory.
+
+
+-=Viru$ "fakes"=-
+
+Someone once noted that a player by the name of Viru$ could make it look like there are more players
+in a zone than in actuality.  This is in fact done by using my SSFlood program on a 56k modem so that
+the "flood" never happens, but as a side-effect, a large number of players appear to be in the zone.
+You can tone down the program now that the source is out so that this side-effect may be exploited.
+
+
+-=Space Dock=-
+
+I bet you are wondering how Space Dock manages to change your user password and resolution settings without opening
+SubSpace.  These are stored in the Windows registry and loaded on startup.  Execute Start:Run:RegEdit to view the
+registry.  Look up this key - HKEY_CURRENT_USER:Software:Virgin:SubSpace (Provided by DoCk> from Trench Wars).  In
+Visual Basic, exploiting these keys would be simple.  Especially the PlayerPassword key.
+
+URLs to sites with modules for reading/writing the registry:
+  http://www.andreavb.f2s.com/tip080003.html
+  http://vb-world.net/registry/
+  http://www.codearchive.com/vbasic/select.cgi?section=registry&startat=0
+
+
+-=SubSpace memory ChatList=-
+
+Chat messages are stored by SubSpace in a fixed location in memory at offset 4738624.
+They are listed from the latest message to the oldest message and contain only the text displayed
+and the color of the text.  There are 40 messages maximum.  The color of the text may be modified
+for some interesting results, such as several different shades of pink.  It is assumed that the
+color descriptor works just like MERVBot's color descriptor, with plenty of extra colors to play
+with.  Each chat line has a length up to 104 characters and is NULL-terminated (has Chr(0) at the
+end).  The message class is a byte after each message at offset 4738784 + (188 * <Message number>),
+where <Message number> starts at 0.  Unspoken, each chat message is 188 bytes long in totality.
+
+
+-=Security checksums=-
+
+These have been hacked for SubSpace.  You may find pretty C++ classes that do the nitty-gritty in
+MERVBot's encrypt.cpp and checksum.cpp files.
+
+
+-=Directory Server protocol w/ the subspace client v1.35=-
+
+Notes:
+I'm sorry if the terms i use are too general to accurately describe
+some of the components of subspace protocol.  I did this in 30 minutes
+so be polite =)
+
+Terminology:
+(stripped) = stripped of reliable header which illicits virtual ACK responses from clients,
+             used for insuring packet recv'd and packet recv'd in order
+Special header/packets/types/etc = packet IDs using two bytes starting with 00 + one byte
+                                   representing a special type of packet.  I've documented
+                                   most these headers elsewhere.  However, here i describe
+                                   00 0a headers used to stream stacked data used by both
+                                   subgame and dirserv and maybe subbill.  This special
+                                   packet was one i had forgotten about.
+Physical packets = top-level packets that are actually recv'd unformatted at the Data layer,
+                   in this case everything that the UDP/IP packet sends to the client.
+                   ie. "00 01 00 00 00 00 01 00"
+<> = A set of physical packets which may be stripped has been sent
+[] = Sub packets stacked on the end of <> packets
+
+Packet log (In chronological order):
+POV: Client135
+
+C2S2C <Standard greeting>
+"00 01 PW PW PW PW TT TT"
+"00 02 PS PS PS PS"
+PW = Client key
+PS = Server key
+TT = Encryption type (default 1, other values unimplemented)
+
+C2S <DirServ request(stripped)>
+"01 MI MI MA MA"
+MI - Minimum number of players
+MA - Maximum number of players (0 = any)
+
+Note: This packet is resent by the client until the dirserv list is recv'd, and
+      since the DirServ doesn't resend the list every time, DoS flooding with this
+      command is unlikely to be a problem.
+
+C2S <Standard Sync packet>
+"00 05 TT TT TT TT SS SS SS SS RR RR RR RR"
+TT = GetTickCount \ 10
+SS = Total # of packets sent + 1
+RR = Total # of packets received
+
+Note: In some cases, a response to this is never sent so it is unlikely that the server
+      requires it.
+
+S2C <Directory list (stripped)>
+[Packet header] + [Server entries(fragmented, only parseable when all fragments are recv'd and stacked)]
+
+Note: Packet data length may be up to 492 chars including the reliable headers.  That
+      means only 486 chars are to be used for the actual packet data sent.
+
+The 00 0a header on Directory Server -> Requesting Client server list packets is generic.
+You may find it described near the top of this document.
+
+[Server entry (entries are stacked and fragmented physically)]
+"IP IP IP IP PO PO PP PP XX XX YY YY YY YY + NAME + COMMENT"
+IP = IP address
+PO = Port
+PP = # of players in the zone
+XX = Scoring available? 1 = true, 0 = false
+YY = Server version, should be 134
+NAME = Server name (buffer 64 chars wide)
+COMMENT = Server comment (null terminated)
+
+C2S <client finishes the directory download and disconnects>
+"00 07"
+
+-Catid@pacbell.net ICQ#18736684 (10/18/01)
