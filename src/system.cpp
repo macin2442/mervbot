@@ -166,7 +166,7 @@ bool readDataLines(char *name, void (*callback)(char *line))
 	return true;
 }
 
-bool _stdcall decompress_to_file(char *name, void *buffer, Uint32 buffer_length)
+bool decompress_to_file(char *name, void *buffer, Uint32 buffer_length)
 {
 	if (buffer_length <= 0) return false;
 
