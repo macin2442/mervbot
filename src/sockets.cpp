@@ -6,6 +6,8 @@
 
 #if !__linux__
 #pragma comment(lib, "ws2_32.lib")
+#else
+#include <poll.h>
 #endif
 
 
@@ -111,13 +113,11 @@ UDPPacket *UDPSocket::poll()
 #if !__linux__
 	if (WSAWaitForMultipleEvents(1, &event, false, 0, true) == WSA_WAIT_EVENT_0)
 #else
-	fd_set rdfs;
-	struct timeval tv;
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
+	struct pollfd fd;
+	fd.fd = sid;
+	fd.events = POLLIN;
 
-	FD_SET(sid, &rdfs);
-	if (select(sid + 1, &rdfs, NULL, NULL, &tv) > 0)
+	if (::poll(&fd, 1, 0) > 0)
 #endif
 	{
 		int len;
