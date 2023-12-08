@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "algorithms.h"
+#include <cctype>
 
 
 //////// Fielding ////////
@@ -345,7 +346,7 @@ String String::split(char delimiter)
 String String::ltrim()
 {
 	for (Uint32 i = 0; i < len; ++i)
-		if (msg[i] != ' ')
+		if (!std::isspace(msg[i]))
 			return right(len - i);
 
 	return String();
@@ -354,7 +355,7 @@ String String::ltrim()
 String String::rtrim()
 {
 	for (Uint32 i = 0; i < len; ++i)
-		if (msg[(len - 1) - i] != ' ')
+		if (!std::isspace(msg[(len - 1) - i]))
 			return left((len - 1) - i + 1);
 
 	return String();
