@@ -1564,7 +1564,7 @@ void Host::spectate(Player *p)
 	lastSpec = getTime();
 }
 
-void Host::sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level, bool shrapBounce, BYTE shrapLevel, BYTE shrapCount, bool secondary)
+void Host::sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level, bool bouncing, bool emp, bool isBomb, BYTE shrapCount, bool secondary)
 {
 	lastPosition = getTime();
 	clientMessage *cm;
@@ -1588,7 +1588,7 @@ void Host::sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level,
 								Me->ufo,
 								Me->bounty,
 								Me->energy,
-								(Projectile_Types) ptype, level, shrapBounce, shrapLevel, shrapCount, secondary,
+								(Projectile_Types) ptype, level, bouncing, emp, isBomb, shrapCount, secondary,
 								Me->timer,
 								(Uint16)syncPing,
 								Me->shields,
@@ -1618,7 +1618,7 @@ void Host::sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level,
 								Me->ufo,
 								Me->bounty,
 								Me->energy,
-								(Projectile_Types) ptype, level, shrapBounce, shrapLevel, shrapCount, secondary);
+								(Projectile_Types) ptype, level, bouncing, emp, isBomb, shrapCount, secondary);
 	}
 
 	if (reliable)
@@ -1633,12 +1633,12 @@ void Host::sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level,
 
 void Host::sendPosition(Uint32 timestamp, bool reliable)
 {
-	sendPosition(reliable, timestamp, PROJ_None, LVL_One, false, 0, 0, false);
+	sendPosition(reliable, timestamp, PROJ_None, LVL_One, false, false, false, 0, false);
 }
 
 void Host::sendPosition(bool reliable)
 {
-	sendPosition(reliable, getHostTime(), PROJ_None, LVL_One, false, 0, 0, false);
+	sendPosition(reliable, getHostTime(), PROJ_None, LVL_One, false, false, false, 0, false);
 }
 
 void Host::doEvents()
@@ -1798,7 +1798,7 @@ void Host::doEvents()
 
 							Me->d = TriangulateFireAngle(Me->work - p->work, p->vel - Me->vel, settings.ships[Me->ship].BombSpeed / 1000);
 							if (turretMode == 1) Me->d = oppositeDirection(Me->d);
-							sendPosition(false, getHostTime(), PROJ_Bullet, settings.ships[Me->ship].MaxGuns - 1, false, 0, 0, true);
+							sendPosition(false, getHostTime(), PROJ_Bullet, settings.ships[Me->ship].MaxGuns - 1, false, false, false, 0, true);
 						}
 						else
 						{

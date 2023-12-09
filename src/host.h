@@ -378,7 +378,7 @@ public:
 	Operator_Level lowestLevel;				// Lowest level command access enabled
 	Uint32 lastPosition;
 
-	void sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level, bool shrapBouncing, BYTE shrapLevel, BYTE shrapCount, bool secondary);
+	void sendPosition(bool reliable, Uint32 timestamp, BYTE ptype, BYTE level, bool bouncing, bool emp, bool isBomb, BYTE shrapCount, bool secondary);
 	void sendPosition(bool reliable);
 	void sendPosition(Uint32 timestamp, bool reliable);
 

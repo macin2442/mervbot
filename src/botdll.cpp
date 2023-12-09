@@ -302,7 +302,7 @@ try {
 		{
 			weaponInfo *wi = (weaponInfo*)event.p[0];
 
-			h->sendPosition(false, h->getHostTime(), wi->type, wi->level, wi->shrapBounce, wi->shrapLevel, wi->shrapCount, wi->fireType);
+			h->sendPosition(false, h->getHostTime(), wi->type, wi->level, wi->bouncing, wi->emp, wi->isBomb, wi->shrapCount, wi->fireType);
 		}
 		break;
 	case EVENT_DropFlags:

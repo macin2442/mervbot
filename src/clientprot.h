@@ -269,8 +269,9 @@ union weaponInfo
 	{
 		Uint16 type			: 5;	// enum Projectile_Types
 		Uint16 level		: 2;	// Only for bombs/bullets
-		Uint16 shrapBounce	: 1;	// Bouncing shrapnel?
-		Uint16 shrapLevel	: 2;	// Shrapnel level 0..3
+		Uint16 bouncing		: 1;	// ~~Bouncing shrapnel?~~ (bomb only)
+		Uint16 emp			: 1;	// ~~Shrapnel level 0..3~~ (bomb only)
+		Uint16 isBomb		: 1;	// ~~Shrapnel level 0..3~~ ; this is a bomb
 		Uint16 shrapCount	: 5;	// 0-31
 		Uint16 fireType		: 1;	// Bombs -> Mines, Bullets -> Multifire
 	};
@@ -623,12 +624,12 @@ clientMessage *generateAttachRequest	(Uint16 player);
 clientMessage *generateBrickDrop		(Uint16 xtile, Uint16 ytile);
 clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, Uint16 y, Uint16 xvelocity, Uint16 yvelocity,
 										 bool stealth, bool cloaked, bool xradar, bool awarp, bool flash, bool safety, bool ufo,
-										 Uint16 bounty, Uint16 energy, Projectile_Types type, BYTE level, bool shrapBounce, BYTE shrapLevel,
+										 Uint16 bounty, Uint16 energy, Projectile_Types type, BYTE level, bool bouncing, bool emp, bool isBomb,
 										 BYTE shrapCount, bool secondary, Uint16 timer, Uint16 S2CLag, bool shields, bool super,
 										 BYTE burst, BYTE repel, BYTE thor, BYTE brick, BYTE decoy, BYTE rocket, BYTE portal);
 clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, Uint16 y, Uint16 xvelocity, Uint16 yvelocity,
 										 bool stealth, bool cloaked, bool xradar, bool awarp, bool flash, bool safety, bool ufo,
-										 Uint16 bounty, Uint16 energy, Projectile_Types type, BYTE level, bool shrapBounce, BYTE shrapLevel,
+										 Uint16 bounty, Uint16 energy, Projectile_Types type, BYTE level, bool bouncing, bool emp, bool isBomb,
 										 BYTE shrapCount, bool secondary);
 clientMessage *generateFileTransfer		(char *fileName, char *buffer, Uint32 len);
 clientMessage *generateSendNewVoice		(BYTE id, Uint16 player, char *buffer, Uint32 len);

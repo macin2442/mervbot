@@ -1531,8 +1531,9 @@ void __stdcall handleWeaponUpdate(hostMessage *m)
 					}
 					wi.level		= limit(wi.level, h->settings.ships[Me->ship].MaxBombs - 1);
 					wi.shrapCount	= limit(wi.shrapCount, h->settings.ships[Me->ship].ShrapnelMax);
-					wi.shrapLevel	= limit(wi.shrapLevel, h->settings.ships[Me->ship].MaxBombs - 1);
-					wi.shrapBounce	= limit(wi.shrapBounce, !!h->settings.pw.BouncingBullets);
+					wi.emp			= limit(wi.emp, h->settings.ships[Me->ship].EmpBomb);
+					wi.isBomb       = 1;
+					wi.bouncing		= limit(wi.bouncing, !!h->settings.pw.BouncingBullets);
 					wi.fireType		= limit(wi.fireType, !!h->settings.ships[Me->ship].MaxMines);
 					break;
 				case PROJ_Decoy:
@@ -1565,7 +1566,7 @@ void __stdcall handleWeaponUpdate(hostMessage *m)
 					break;
 				};
 
-				h->sendPosition(false, timestamp, wi.type, wi.level, wi.shrapBounce, wi.shrapLevel, wi.shrapCount, wi.fireType);
+				h->sendPosition(false, timestamp, wi.type, wi.level, wi.bouncing, wi.emp, wi.isBomb, wi.shrapCount, wi.fireType);
 			}
 		}
 	}
@@ -3688,7 +3689,7 @@ clientMessage *generateBrickDrop		(Uint16 xtile, Uint16 ytile)
 clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, Uint16 y, Uint16 xvelocity,
 										 Uint16 yvelocity, bool stealth, bool cloaked, bool xradar, bool awarp,
 										 bool flash, bool safety, bool ufo, Uint16 bounty, Uint16 energy,
-										 Projectile_Types type, BYTE level, bool shrapBounce, BYTE shrapLevel,
+										 Projectile_Types type, BYTE level, bool bouncing, bool emp, bool isBomb,
 										 BYTE shrap, bool secondary, Uint16 timer, Uint16 S2CLag, bool shields,
 										 bool supers, BYTE burst, BYTE repel, BYTE thor, BYTE brick, BYTE decoy,
 										 BYTE rocket, BYTE portal)
@@ -3727,8 +3728,9 @@ clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, U
 	si.xradar	= xradar;
 
 	weaponInfo wi;
-	wi.shrapBounce	= shrapBounce;
-	wi.shrapLevel	= shrapLevel;
+	wi.bouncing		= bouncing;
+	wi.emp			= emp;
+	wi.isBomb		= isBomb;
 	wi.shrapCount	= shrap;
 	wi.fireType		= secondary;
 	wi.level		= level;
@@ -3772,7 +3774,7 @@ clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, U
 clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, Uint16 y, Uint16 xvelocity,
 										 Uint16 yvelocity, bool stealth, bool cloaked, bool xradar, bool awarp,
 										 bool flash, bool safety, bool ufo, Uint16 bounty, Uint16 energy,
-										 Projectile_Types type, BYTE level, bool shrapBounce, BYTE shrapLevel,
+										 Projectile_Types type, BYTE level, bool bouncing, bool emp, bool isBomb,
 										 BYTE shrap, bool secondary)
 {	clientMessage *ret = new clientMessage(22);
 	if (ret == NULL) return NULL;
@@ -3805,8 +3807,9 @@ clientMessage *generatePosition			(Uint32 timestamp, BYTE direction, Uint16 x, U
 	si.xradar	= xradar;
 
 	weaponInfo wi;
-	wi.shrapBounce	= shrapBounce;
-	wi.shrapLevel	= shrapLevel;
+	wi.bouncing	= bouncing;
+	wi.emp		= emp;
+	wi.isBomb	= isBomb;
 	wi.shrapCount	= shrap;
 	wi.fireType		= secondary;
 	wi.level		= level;
