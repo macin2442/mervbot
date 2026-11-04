@@ -3125,7 +3125,13 @@ void __stdcall handlePasswordResponse(hostMessage *m)
 			h->disconnect(true);
 		break;
 	case LOG_UsingDemoVersion:	h->logEvent("You are currently using the demo version.  Your name and score will not be kept track of.");
-			h->disconnect(true);
+		{
+			// A notice, not a refusal: Continuum plays on as a demo player (unregistered name, score not kept)
+			h->activateGameProtocol();
+			h->changeArena(botInfo->initialArena);
+
+			h->logLogin();
+		}
 		break;
 	case LOG_TooManyDemos:		h->logEvent("This arena is currently has(sic) the maximum Demo players allowed, try again later.");
 			h->disconnect(true);
