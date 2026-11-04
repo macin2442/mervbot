@@ -2521,7 +2521,7 @@ void __stdcall handleMapInfo(hostMessage *m)
 				Uint32 checksum = getLong(msg + i, 16);
 				Uint32 cmplen = getLong(msg + i, 20);
 
-//				h->logEvent("LVZ: %s [chk:%i cmplen:%i]", filename, checksum, cmplen);
+				h->logEvent("LVZ: %s [chk:%i cmplen:%i]", filename, checksum, cmplen);
 			}
 		}
 	}
