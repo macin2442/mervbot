@@ -389,6 +389,7 @@ public:
 	bool loadedFlags;	// Loaded turf flags?
 	BYTE map[TILE_MAX_LINEAR];
 	arenaSettings settings;
+	char arenaName[64];						// Arena last asked for (changeArena), for get/settings-<arena>.bin
 
 	void changeArena(const char *name);
 	void changeCoordinates();

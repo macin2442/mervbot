@@ -2870,6 +2870,22 @@ void __stdcall handleArenaSettings(hostMessage *m)
 	arenaSettings *settings = &h->settings;
 	memcpy(settings, msg, 1428);
 
+	// Keep the packet as it came (get/settings-<arena>.bin): tools/settings2asss.py turns it into an ASSS arena.conf
+	char arena[64];
+	Uint32 n = 0;
+	for (const char *c = h->arenaName; *c && n < sizeof(arena) - 1; ++c)
+		arena[n++] = (isalnum((unsigned char)*c) || *c == '-' || *c == '_') ? *c : '_';
+	arena[n] = '\0';
+
+	char fileName[96];
+	snprintf(fileName, sizeof(fileName), "get/settings-%s.bin", n ? arena : "unknown");
+
+	ofstream file(fileName, ios::binary | ios::trunc);
+	if (file && file.write(msg, 1428))
+		h->logEvent("Saved arena settings to %s", fileName);
+	else
+		h->logEvent("WARNING: Unable to save arena settings to %s", fileName);
+
 	// Update prize system parameters
 //	h->ps.setSettings(&h->settings, h->map);
 

@@ -62,6 +62,17 @@ When you are done using the bot, press a key to close it.
 Thank you for testing MERVBot!
 
 
+## Arena settings for ASSS
+
+On entering an arena the bot saves the settings packet the zone sends every client (1428 bytes) to `get/settings-<arena>.bin`. [tools/settings2asss.py](tools/settings2asss.py) turns it into an ASSS `arena.conf` fragment, with the key names taken from the `clientset.def` of the ASSS version it is for:
+
+```
+tools/settings2asss.py get/settings-0.bin --clientset-def ~/asss/src/core/clientset.def --map mymap.lvl > settings.conf
+```
+
+It covers everything in the packet (ships, weapons, prize weights, spawn positions, soccer, radar, ...); a zone configured with only its output sends the identical packet (tested with ASSS 2.0). Server-side rules are not in the packet: scoring and rewards, death prize weights, team limits, flag games, modules, LVZ files and the map name (`--map`). The bot downloads the map into `lvl/`, but not LVZ files (Continuum keeps those in `zones/<zone name>/`). Ask a zone's staff before copying its settings and maps.
+
+
 ## FAQ
 
 Q. What is a MERVBot?  

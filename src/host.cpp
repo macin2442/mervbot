@@ -1386,6 +1386,7 @@ void Host::resetSession()
 Host::Host(BOT_INFO &bi)
 {
 	strncpy(creation_parameters, bi.params, 512);
+	arenaName[0] = '\0';
 
 	// Logs
 	lastLogTime = 0;
@@ -1500,6 +1501,9 @@ void Host::changeArena(const char *name)
 	}
 
 	resetArena();
+
+	strncpy(arenaName, name, sizeof(arenaName) - 1);
+	arenaName[sizeof(arenaName) - 1] = '\0';
 
 	logEvent("Entering arena \'%s\'", name);
 
